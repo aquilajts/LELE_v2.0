@@ -89,10 +89,11 @@ def salvar():
     }
 
     try:
-    supabase.table("vendas").insert(venda).execute()
-except Exception as e:
-    print("Erro ao salvar venda:", e)
-    return 'Erro ao salvar', 500
+        supabase.table("vendas").insert(venda).execute()
+        return '', 200
+    except Exception as e:
+        print("Erro ao salvar venda:", e)
+        return 'Erro ao salvar', 500
 
 @app.route('/excluir', methods=['DELETE'])
 def excluir():
