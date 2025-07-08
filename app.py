@@ -1,21 +1,20 @@
 from flask import Flask, request, jsonify, render_template_string, redirect, session
-import sqlite3
+from flask_cors import CORS
 from datetime import datetime
+from supabase import create_client
 import os
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = 'sua_chave_super_secreta'
 
-DATABASE = 'vendas.db'
+# Pegando chaves do ambiente (Render)
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 MASTER_IDS = ['Confiadmin', 'Acessorestrito']
-
 HTML = open("templates/index.html", encoding="utf-8").read()
-
-
-def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 @app.route('/')
@@ -47,60 +46,7 @@ def obter_id():
 def painel():
     if 'usuario_id' not in session:
         return redirect('/')
-
-    usuario_id = session['usuario_id']
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    if usuario_id in MASTER_IDS:
-        cur.execute("SELECT * FROM vendas ORDER BY data DESC")
-    else:
-        cur.execute("SELECT * FROM vendas WHERE usuario_id = ? ORDER BY data DESC", (usuario_id,))
-
-    vendas = cur.fetchall()
-    conn.close()
-
-    return render_template_string(HTML, vendas=vendas, usuario_id=usuario_id, master=usuario_id in MASTER_IDS)
-
-
-@app.route('/salvar', methods=['POST'])
-def salvar():
-    if 'usuario_id' not in session:
-        return 'Não autorizado', 403
-
-    user_id = session['usuario_id']
-    if user_id in MASTER_IDS:
-        return 'Contas Master não podem cadastrar vendas', 403
-
-    data = request.get_json()
-    
-    venda = (
-        datetime.now().strftime('%d/%m/%Y %H:%M'),
-        data.get('cliente'),
-        data.get('telefone'),
-        data.get('veiculo'),
-        data.get('placa'),
-        data.get('fipe'),
-        data.get('mensalidade_original'),
-        data.get('mensalidade_desconto'),
-        data.get('participacao'),
-        data.get('desconto'),
-        data.get('observacoes'),
-        user_id
-    )
-
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO vendas (data, cliente, telefone, veiculo, placa, fipe,
-                            mensalidade_original, mensalidade_desconto,
-                            participacao, desconto, observacoes, usuario_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, venda)
-    conn.commit()
-    conn.close()
-
-    return '', 200
+    return render_template_string(HTML)
 
 
 @app.route('/vendas')
@@ -109,34 +55,54 @@ def listar_vendas():
         return jsonify([])
 
     usuario_id = session['usuario_id']
-    conn = get_db_connection()
-    cur = conn.cursor()
-
     if usuario_id in MASTER_IDS:
-        cur.execute("SELECT * FROM vendas ORDER BY data DESC")
+        res = supabase.table("vendas").select("*").order("data", desc=True).execute()
     else:
-        cur.execute("SELECT * FROM vendas WHERE usuario_id = ? ORDER BY data DESC", (usuario_id,))
+        res = supabase.table("vendas").select("*").eq("usuario_id", usuario_id).order("data", desc=True).execute()
 
-    vendas = cur.fetchall()
-    conn.close()
-
-    return jsonify([dict(v) for v in vendas])
+    return jsonify(res.data)
 
 
-@app.route('/excluir', methods=['POST'])
+@app.route('/salvar', methods=['POST'])
+def salvar():
+    if 'usuario_id' not in session:
+        return 'Não autorizado', 403
+    user_id = session['usuario_id']
+    if user_id in MASTER_IDS:
+        return 'Contas Master não podem cadastrar vendas', 403
+
+    data = request.get_json()
+
+    venda = {
+        "data": datetime.now().strftime('%d/%m/%Y %H:%M'),
+        "cliente": data.get("cliente"),
+        "telefone": data.get("telefone"),
+        "veiculo": data.get("veiculo"),
+        "placa": data.get("placa"),
+        "fipe": data.get("fipe"),
+        "mensalidade_original": data.get("mensalidade_original"),
+        "mensalidade_desconto": data.get("mensalidade_desconto"),
+        "participacao": data.get("participacao"),
+        "descTexto": data.get("descTexto"),
+        "obs": data.get("obs"),
+        "usuario_id": user_id
+    }
+
+    supabase.table("vendas").insert(venda).execute()
+    return '', 200
+
+
+@app.route('/excluir', methods=['DELETE'])
 def excluir():
     if 'usuario_id' not in session:
         return 'Não autorizado', 403
-
     if session['usuario_id'] in MASTER_IDS:
         return 'Contas Master não podem excluir', 403
 
-    venda_id = request.get_json().get('id')
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM vendas WHERE id = ?", (venda_id,))
-    conn.commit()
-    conn.close()
+    placa = request.args.get("placa")
+    data = request.args.get("data")
+
+    supabase.table("vendas").delete().match({"placa": placa, "data": data}).execute()
     return '', 200
 
 
@@ -144,34 +110,27 @@ def excluir():
 def editar():
     if 'usuario_id' not in session:
         return 'Não autorizado', 403
-
     if session['usuario_id'] in MASTER_IDS:
         return 'Contas Master não podem editar', 403
 
     data = request.get_json()
     venda_id = data.get('id')
 
-    campos = [
-        'cliente', 'telefone', 'veiculo', 'placa', 'fipe',
-        'mensalidade_original', 'mensalidade_desconto',
-        'participacao', 'desconto', 'observacoes', 'usuario_id'
-    ]
-    valores = [data.get(campo) for campo in campos]
+    campos = {
+        'cliente': data.get('cliente'),
+        'telefone': data.get('telefone'),
+        'veiculo': data.get('veiculo'),
+        'placa': data.get('placa'),
+        'fipe': data.get('fipe'),
+        'mensalidade_original': data.get('mensalidade_original'),
+        'mensalidade_desconto': data.get('mensalidade_desconto'),
+        'participacao': data.get('participacao'),
+        'descTexto': data.get('descTexto'),
+        'obs': data.get('obs')
+    }
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute(f"""
-        UPDATE vendas SET
-            cliente = ?, telefone = ?, veiculo = ?, placa = ?, fipe = ?,
-            mensalidade_original = ?, mensalidade_desconto = ?,
-            participacao = ?, desconto = ?, observacoes = ?
-        WHERE id = ?
-    """, valores + [venda_id])
-
-    conn.commit()
-    conn.close()
+    supabase.table("vendas").update(campos).eq("id", venda_id).execute()
     return '', 200
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
