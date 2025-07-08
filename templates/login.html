@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Gestão de Vendas</title>
+  <link rel="icon" href="data:,">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script>
+    async function realizarLogin(event) {
+      event.preventDefault();
+      const id = document.getElementById('id').value;
+      if (id.length < 5 || id.length > 20) {
+        alert("O ID deve ter entre 5 e 20 caracteres.");
+        return;
+      }
+
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+
+      if (response.ok) {
+        window.location.href = "/painel";
+      } else {
+        alert("ID inválido.");
+      }
+    }
+  </script>
+</head>
+<body class="bg-black text-white h-screen flex items-center justify-center">
+  <div class="w-full max-w-sm bg-gray-900 p-8 rounded-lg shadow-lg">
+    <h1 class="text-2xl font-bold mb-6 text-center">Acesso ao Sistema</h1>
+    <form onsubmit="realizarLogin(event)">
+      <label for="id" class="block mb-2">Digite seu ID:</label>
+      <input id="id" name="id" type="password" minlength="5" maxlength="20" required class="w-full p-2 mb-4 rounded bg-gray-800">
+      <button type="submit" class="w-full bg-white text-black p-2 rounded">Entrar</button>
+    </form>
+  </div>
+</body>
+</html>
