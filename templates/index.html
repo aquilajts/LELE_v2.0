@@ -24,27 +24,25 @@ conto<!DOCTYPE html>
     }
 
     async function salvarVenda() {
-      const form = document.getElementById('form');
-    
       const venda = {
-        cliente: form.cliente.value,
-        telefone: form.telefone.value,
-        veiculo: form.veiculo.value,
-        placa: form.placa.value,
-        fipe: form.fipe.value,
-        mensalidade_original: form.mensalidade_original.value,
-        mensalidade_desconto: form.mensalidade_desconto.value,
-        participacao: form.participacao.value,
-        descTexto: form.descTexto.value,
-        obs: form.obs.value
+        cliente: document.getElementById("cliente").value,
+        telefone: document.getElementById("telefone").value,
+        veiculo: document.getElementById("veiculo").value,
+        placa: document.getElementById("placa").value,
+        fipe: parseFloat(document.getElementById("fipe").value.replace(",", ".")),
+        mensalidade_original: parseFloat(document.getElementById("mensalidade_original").value.replace(",", ".")),
+        mensalidade_desconto: parseFloat(document.getElementById("mensalidade_desconto").value.replace(",", ".")),
+        participacao: parseFloat(document.getElementById("participacao").value.replace(",", ".")),
+        descTexto: document.getElementById("descTexto").value,
+        obs: document.getElementById("obs").value
       };
-    
+  
       const duplicada = dadosGlobais.find(v => v.telefone === venda.telefone);
       if (duplicada) {
         const confirma = confirm(`Esse número já está cadastrado no Cliente \"${duplicada.cliente}\" Placa \"${duplicada.placa}\". Deseja substituir?`);
         if (!confirma) return;
       }
-    
+  
       await fetch('/salvar', {
         method: 'POST',
         headers: {
@@ -52,8 +50,8 @@ conto<!DOCTYPE html>
         },
         body: JSON.stringify(venda)
       });
-    
-      form.reset();
+  
+      document.getElementById("form").reset();
       verificarTipo();
     }
 
@@ -85,8 +83,8 @@ conto<!DOCTYPE html>
           <td class='p-2'>R$ ${v.mensalidade_original || "0,00"}</td>
           <td class='p-2'>R$ ${v.mensalidade_desconto || "0,00"}</td>
           <td class='p-2'>R$ ${v.participacao || "0,00"}</td>
-          <td class='p-2'>${v.desconto || "-"}</td>
-          <td class='p-2'>${v.observacoes || "-"}</td>
+          <td class='p-2'>${v.descTexto || "-"}</td>
+          <td class='p-2'>${v.obs || "-"}</td>
           <td class='p-2 flex gap-2'>
             ${isMaster ? '' : `
               <button onclick="preencherFormulario(${i})" class='text-yellow-400'>✏️</button>
@@ -100,7 +98,7 @@ conto<!DOCTYPE html>
 
     function copiarVenda(i) {
       const v = dadosGlobais[i];
-      const texto = `Data: ${v.data}\nCliente: ${v.cliente}\nTelefone: ${v.telefone}\nVeículo: ${v.veiculo}\nPlaca: ${v.placa}\nFIPE: R$ ${v.fipe}\nmensalidade_original: R$ ${v.mensalidade_original}\nmensalidade_desconto: R$ ${v.mensalidade_desconto}\nParticipação: R$ ${v.participacao}\ndesconto: ${v.desconto}\nobservacoes: ${v.observacoes}`;
+      const texto = `Data: ${v.data}\nCliente: ${v.cliente}\nTelefone: ${v.telefone}\nVeículo: ${v.veiculo}\nPlaca: ${v.placa}\nFIPE: R$ ${v.fipe}\nmensalidade_original: R$ ${v.mensalidade_original}\nmensalidade_desconto: R$ ${v.mensalidade_desconto}\nParticipação: R$ ${v.participacao}\ndescTexto: ${v.descTexto}\nobs: ${v.obs}`;
       navigator.clipboard.writeText(texto);
       alert('Informações copiadas!');
     }
@@ -115,8 +113,8 @@ conto<!DOCTYPE html>
       document.getElementById('mensalidade_original').value = v.mensalidade_original;
       document.getElementById('mensalidade_desconto').value = v.mensalidade_desconto;
       document.getElementById('participacao').value = v.participacao;
-      document.getElementById('desconto').value = v.desconto;
-      document.getElementById('observacoes').value = v.observacoes;
+      document.getElementById('descTexto').value = v.descTexto;
+      document.getElementById('obs').value = v.obs;
     }
 
     async function excluirVenda(i) {
