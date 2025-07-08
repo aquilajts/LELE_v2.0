@@ -35,8 +35,8 @@ conto<!DOCTYPE html>
         mensalidade_original: form.mensalidade_original.value,
         mensalidade_desconto: form.mensalidade_desconto.value,
         participacao: form.participacao.value,
-        desconto: form.desconto.value,
-        observacoes: form.observacoes.value
+        descTexto: form.descTexto.value,
+        obs: form.obs.value
       };
     
       const duplicada = dadosGlobais.find(v => v.telefone === venda.telefone);
@@ -56,7 +56,6 @@ conto<!DOCTYPE html>
       form.reset();
       verificarTipo();
     }
-
 
     async function atualizarHistorico(isMaster) {
       const response = await fetch('/vendas');
