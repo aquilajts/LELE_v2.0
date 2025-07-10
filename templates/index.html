@@ -1,4 +1,4 @@
-conto<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -85,11 +85,16 @@ conto<!DOCTYPE html>
           <td class='p-2'>R$ ${v.participacao || "0,00"}</td>
           <td class='p-2'>${v.descTexto || "-"}</td>
           <td class='p-2'>${v.obs || "-"}</td>
-          <td class='p-2 flex gap-2'>
-            ${isMaster ? '' : `
-              <button onclick="preencherFormulario(${i})" class='text-yellow-400'>✏️</button>
-              <button onclick="excluirVenda(${i})" class='text-red-500'>❌</button>
-            `}
+          <td class='p-2'>
+            ${isMaster 
+              ? `<span class="text-xs text-gray-400">${v.usuario_id}</span>` 
+              : `
+                <div class="flex gap-2">
+                  <button onclick="preencherFormulario(${i})" class='text-yellow-400'>✏️</button>
+                  <button onclick="excluirVenda(${i})" class='text-red-500'>❌</button>
+                </div>
+              `
+            }
           </td>
         `;
         tbody.appendChild(tr);
@@ -98,7 +103,18 @@ conto<!DOCTYPE html>
 
     function copiarVenda(i) {
       const v = dadosGlobais[i];
-      const texto = `Data: ${v.data}\nCliente: ${v.cliente}\nTelefone: ${v.telefone}\nVeículo: ${v.veiculo}\nPlaca: ${v.placa}\nFIPE: R$ ${v.fipe}\nmensalidade_original: R$ ${v.mensalidade_original}\nmensalidade_desconto: R$ ${v.mensalidade_desconto}\nParticipação: R$ ${v.participacao}\ndescTexto: ${v.descTexto}\nobs: ${v.obs}`;
+      const texto = `*DATA*: ${v.data}
+    *NOME*: ${v.cliente}
+    *TEL*: ${v.telefone}
+    *VEIC*: ${v.veiculo}
+    *PLACA*: ${v.placa}
+    *FIPE*: R$ ${v.fipe}
+    *Men. De*: R$ ${v.mensalidade_original}
+    *Men. por*: R$ ${v.mensalidade_desconto}
+    *PARTICIPAÇÃO*: R$ ${v.participacao}
+    *DESCONTOS*: ${v.descTexto}
+    *OBS*: ${v.obs}`;
+    
       navigator.clipboard.writeText(texto);
       alert('Informações copiadas!');
     }
