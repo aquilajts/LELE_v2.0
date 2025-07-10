@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template_string, redirect, session
 from flask_cors import CORS
-from datetime import datetime
+from datetime import datetime, timedelta
 from supabase import create_client
 import os
 
@@ -74,7 +74,7 @@ def salvar():
     data = request.get_json()
 
     venda = {
-        "data": datetime.now().strftime('%d/%m/%Y %H:%M'),
+        "data": (datetime.utcnow() - timedelta(hours=3)).strftime('%d/%m/%Y %H:%M'),
         "cliente": data.get("cliente"),
         "telefone": data.get("telefone"),
         "veiculo": data.get("veiculo"),
