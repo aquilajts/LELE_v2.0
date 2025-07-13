@@ -1,0 +1,123 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nossas Coberturas</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f5f5f5; color: #333; margin: 0; padding: 0; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; animation: fadeIn 1s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        header { background-color: #ff1a1a; color: white; padding: 10px 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
+        header img { height: 50px; margin-right: 10px; }
+        .back-btn { background-color: #ff4d4d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+        .back-btn:hover { background-color: #cc0000; }
+        .coverage-section { background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        ul { list-style-type: none; padding: 0; }
+        button { background-color: #ff1a1a; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #cc0000; }
+        footer { text-align: center; padding: 10px; background-color: #ff4d4d; color: white; border-radius: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="static/logo.png" alt="Confiauto Logo">
+            <button class="back-btn" onclick="history.back()">← Voltar</button>
+            <h1>Nossas Coberturas</h1>
+            <p>Conheça todos os benefícios de ser protegido pela Confiauto.</p>
+        </header>
+        <div class="coverage-section">
+            <h2>01. Assistência 24 Horas</h2>
+            <ul>
+                <li>Reboque / Guincho</li>
+                <li>Pane Elétrica e Mecânica</li>
+                <li>Auxílio Pneu Furado</li>
+                <li>Chaveiro Auto</li>
+                <li>Auxílio Falta de Combustível</li>
+            </ul>
+        </div>
+        <div class="coverage-section">
+            <h2>02. Proteções Contra</h2>
+            <ul>
+                <li>Roubo e Furto</li>
+                <li>Cobertura Para Terceiros</li>
+                <li>Perda Total</li>
+                <li>Batida (Colisão)</li>
+                <li>Incêndio*</li>
+                <li>Alagamento*</li>
+            </ul>
+            <p>*Serviços adicionais</p>
+        </div>
+        <div class="coverage-section">
+            <h2>03. Rastreamento 24h</h2>
+            <ul>
+                <li>Localização em Tempo Real</li>
+                <li>Histórico de Trajetos</li>
+                <li>Relatório de Velocidade</li>
+                <li>Bloqueio Remoto do Veículo</li>
+                <li>Aplicativo Para Celular</li>
+                <li>E Muito Mais</li>
+            </ul>
+        </div>
+        <div class="coverage-section">
+            <h2>04. Benefícios Exclusivos</h2>
+            <ul>
+                <li>Carro Reserva</li>
+                <li>Guarda do Veículo Acidentado</li>
+                <li>Hospedagem em Hotel</li>
+                <li>Serviço de Táxi ou Uber</li>
+                <li>Serviço Leva e Traz para Motorista</li>
+            </ul>
+        </div>
+        <div class="coverage-section">
+            <h2>05. Solicite sua Cotação</h2>
+            <p>Tenha toda essa proteção com um dos melhores valores do mercado!</p>
+            <button onclick="window.location.href='simulacao.html'">FAZER SIMULAÇÃO</button>
+        </div>
+    </div>
+    <footer>
+        Contato direto com consultor: 📞 27 99643-7717
+    </footer>
+</body>
+</html>
