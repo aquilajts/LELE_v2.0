@@ -8,7 +8,7 @@
     <style>
         body { 
             font-family: Optima, sans-serif; 
-            background-color: #EDEBEB; 
+            background-color: #FFFFFF; 
             color: #000000; 
             margin: 0; 
             padding: 0; 
@@ -31,7 +31,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         header { 
             background-color: #E7000A; 
-            color: #D2D2DA; 
+            color: #000000; 
             padding: 20px; 
             text-align: center; 
             border-radius: 15px; 
@@ -44,29 +44,32 @@
         }
         header img { 
             height: 60px; 
-            margin-right: 15px; 
+            margin-right: 0; 
+            filter: brightness(0) invert(1); 
         }
         .menu { 
             background-color: #FFFFFF; 
-            padding: 30px; 
+            padding: 20px; 
             border-radius: 15px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
             margin-bottom: 30px; 
             text-align: center; 
             animation: slideUp 1.5s ease-out; 
-            width: 400px; 
-            display: grid; 
+            width: 100%; 
+            max-width: 400px; 
+            display: flex; 
+            flex-direction: column; 
             gap: 15px; 
         }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .menu a { 
             display: block; 
             background-color: #E7000A; 
-            color: #D2D2DA; 
+            color: #FFFFFF; 
             padding: 15px; 
             text-decoration: none; 
             border-radius: 10px; 
-            transition: background-color 0.75s; 
+            transition: background-color 0.3s; 
             font-family: Lucida Bright, serif; 
             font-size: 18px; 
             display: flex; 
@@ -86,17 +89,20 @@
             margin-top: 20px; 
             font-size: 14px; 
             font-family: Optima, sans-serif; 
+            width: 100%; 
+            max-width: 400px; 
         }
         footer a { 
             color: #1BA6A6; 
             text-decoration: underline; 
-            transition: color 0.75s; 
+            transition: color 0.3s; 
         }
         footer a:hover { 
             color: #E7000A; 
         }
         @media (max-width: 768px) {
-            .menu { width: 100%; }
+            .menu, footer { width: 100%; max-width: 100%; }
+            header { width: 100%; }
         }
     </style>
     <script type="text/javascript">
@@ -144,23 +150,16 @@
     <div class="container">
         <header>
             <img src="/static/Logo_ConfiAuto_Nova.png" alt="Confiauto Logo">
-            <h1>Bem-vindo à Confiauto</h1>
         </header>
         <div class="menu">
-            <a href="/cliente" class="block w-full bg-white text-black py-2 rounded text-center font-semibold flex items-center justify-center gap-2">
-                👥 Acesso Cliente
-            </a>
-            <a href="/login" class="block w-full bg-white text-black py-2 rounded text-center font-semibold flex items-center justify-center gap-2">
-                🙋‍♂️ Acesso Funcionário
-            </a>
-            <a href="/static/Regimento-Interno-Confiauto-v.724.pdf" target="_blank" class="block w-full bg-white text-black py-2 rounded text-center font-semibold flex items-center justify-center gap-2">
-                📄 Regimento Interno
-            </a>
+            <a href="/cliente">👥 Acesso Cliente</a>
+            <a href="/login">🙋‍♂️ Acesso Funcionário</a>
+            <a href="/static/Regimento-Interno-Confiauto-v.724.pdf" target="_blank">📄 Regimento Interno</a>
         </div>
     </div>
     <footer>
-        <p>Contato direto com consultor: <a href="https://wa.me/5527996437717" target="_blank" class="text-green-400">📞 27 99643-7717</a></p>
-        <p>Site: <a href="https://confiauto.online" target="_blank" class="text-blue-400">confiauto.online</a> | Instagram: <a href="https://instagram.com/confiauto.online" target="_blank" class="text-pink-400">@Confiauto.online</a></p>
+        <p>Contato direto com consultor: <a href="https://wa.me/5527996437717" target="_blank">📞 27 99643-7717</a></p>
+        <p>Site: <a href="https://confiauto.online" target="_blank">confiauto.online</a> | Instagram: <a href="https://instagram.com/confiauto.online" target="_blank">@Confiauto.online</a></p>
         <p>Central: 27 3500-1994 | Assistência: 0800 591 7295</p>
     </footer>
 </body>
