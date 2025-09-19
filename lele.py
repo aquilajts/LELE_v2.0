@@ -252,7 +252,7 @@ def estoque():
                 'nome': item['nome'],
                 'descricao': item.get('descricao', ''),
                 'preco': float(item['preco']),
-                'imagem_url': item.get('imagem', '/static/default.png'),  # Usa campo 'imagem' da sua tabela
+                'imagem_url': item.get('imagem_url', '/static/produtos/default.png'),
                 'disponivel': item.get('disponivel', True)  # Se não existir, assume True
             })
         
