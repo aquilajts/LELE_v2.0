@@ -32,9 +32,10 @@
            margin: 10px 0;
        }
        
-       @media (max-width: 600px) {
+       /* Agora só muda para 1 coluna em telas MUITO pequenas (ex: tablets antigos ou landscape apertado) */
+       @media (max-width: 480px) {  /* Ajuste aqui: 480px é seguro para manter 2 colunas em phones como S20 FE (360px) */
            .item-row {
-               grid-template-columns: 1fr; /* no celular fica só 1 coluna */
+               grid-template-columns: 1fr; /* 1 coluna só em telas bem estreitas */
            }
        }
 
