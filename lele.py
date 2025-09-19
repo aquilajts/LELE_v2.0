@@ -64,7 +64,7 @@ def login():
                 app.permanent_session_lifetime = timedelta(minutes=180)
                 return redirect(url_for('index'))
             else:
-                return render_template('login.html', erro="Senha incorreta", authenticated=False)
+                return render_template('login.html', erro="Senha incorreta. O nome já está cadastrado, tente outra senha ou nome.", authenticated=False)
         else:
             # Nome não existe, cadastra novo com nome_lower e nome original
             id_cliente = f"{nome_lower}_{senha}"
