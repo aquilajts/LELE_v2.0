@@ -15,7 +15,7 @@ load_dotenv()
 
 # Inicializa o Flask
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'churrasquinho_lele_fixed_key_2025')  # Adicione SECRET_KEY no Render env pra segurança
+app.secret_key = os.getenv('SECRET_KEY', 'churrasquinho_lele_v2_fixed_key_2025')  # Adicione SECRET_KEY no Render env pra segurança
 
 # Configura o Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
