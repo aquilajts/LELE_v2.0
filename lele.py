@@ -80,7 +80,7 @@ def cardapio():
         categoria = item['categoria']
         if categoria not in categorias:
             categorias[categoria] = []
-        item['imagem'] = item.get('imagem', 'default.png')
+        item['imagem_url'] = item.get('imagem_url', '/static/produtos/default.png')
         categorias[categoria].append(item)
     return render_template('cardapio.html', categorias=categorias, mesa=mesa)
 
