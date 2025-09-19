@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Churrasquinho do Lêle - Estoque</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background: url('static/wallpaperhorizontal.png') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: #FFFFFF;
+        }
+        header {
+            text-align: center;
+            padding: 15px;
+            font-family: 'Lucida Bright', serif;
+            font-weight: bold;
+            font-size: 2em;
+            color: #FFFFFF;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        nav {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px;
+            background-color: rgba(139,0,0,0.9);
+            text-align: center;
+        }
+        nav button {
+            background-color: #8B0000;
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            margin: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        nav button:hover { transform: scale(1.05); background-color: #A52A2A; }
+        .content { flex: 1; padding: 20px; }
+        .item-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 10px 0;
+        }
+        .item-card {
+            background-color: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            width: 150px;
+            text-align: center;
+            transition: transform 0.2s;
+            color: #000000;
+        }
+        .item-card:hover { transform: scale(1.05); }
+        .item-card img {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .footer {
+            background-color: #000000;
+            text-align: center;
+            padding: 12px;
+            font-size: 0.9em;
+            margin-top: auto;
+        }
+        .footer a {
+            color: #FFCD00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>ESTOQUE - CHURRASQUINHO DO LÊLE</header>
+    <div style="position: absolute; top: 10px; right: 10px;">
+        <a href="/funcionario" title="Voltar para Funcionário">
+            <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
+                <i class="fas fa-arrow-left" style="font-size: 20px;"></i>
+            </button>
+        </a>
+    </div>
+    <nav>
+        {% for categoria in categorias.keys() %}
+        <button onclick="showCategoria('{{ categoria }}')">{{ categoria }}</button>
+        {% endfor %}
+    </nav>
+    
+    <div class="content">
+        {% for categoria, itens in categorias.items() %}
+        <div id="{{ categoria }}" class="categoria" style="display: {% if categoria == 'Bebidas quentes e batidas' %}block{% else %}none{% endif %}; padding: 10px;">
+            {% for item in itens|batch(2) %}
+            <div class="item-row">
+                {% for i in item %}
+                <div class="item-card">
+                    <img src="{{ i.imagem_url }}" style="{% if not i.disponivel %}filter: grayscale(100%);{% endif %}">
+                    <h3 style="font-weight: bold; font-size: 18px; margin: 5px 0;">{{ i.nome }}</h3>
+                    <p style="font-size: 12px; color: #6B7280; margin: 4px 0;">{{ i.descricao }}</p>
+                    <p style="color: #4B5563; font-size: 14px; margin: 5px 0;">R$ {{ '%.2f'|format(i.preco) }}</p>
+                    <label class="toggle-switch">
+                        <input type="checkbox" {% if i.disponivel %}checked{% endif %} onchange="atualizarDisponibilidade('{{ i.ID }}', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                    <p style="font-size: 12px; margin-top: 5px;">{% if i.disponivel %}Disponível{% else %}Indisponível{% endif %}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="footer">
+        <a href="https://www.instagram.com/churrasquinhodolele027" target="_blank">
+            @churrasquinhodolele027
+        </a><br>
+        ABERTO DE 17:30 AS 00:30<br>
+        SEGUNDA A SEXTA
+    </div>
+
+    <script>
+        function showCategoria(categoria) {
+            document.querySelectorAll('.categoria').forEach(el => el.style.display = 'none');
+            document.getElementById(categoria).style.display = 'block';
+        }
+
+        async function atualizarDisponibilidade(id, disponivel) {
+            try {
+                const response = await fetch('/estoque/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: id, disponivel: disponivel })
+                });
+                if (!response.ok) {
+                    alert('Erro ao atualizar disponibilidade.');
+                    // Reverter o toggle se falhar
+                    const checkbox = event.target;
+                    checkbox.checked = !checkbox.checked;
+                }
+            } catch (error) {
+                alert('Erro de rede ao atualizar.');
+                const checkbox = event.target;
+                checkbox.checked = !checkbox.checked;
+            }
+        }
+    </script>
+</body>
+</html>
