@@ -43,30 +43,42 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        nome = request.form.get('nome')
+        nome = request.form.get('nome').strip()
         senha = request.form.get('senha')
         if len(senha) < 6:
             return render_template('login.html', erro="Senha deve ter pelo menos 6 dígitos", authenticated=False)
-        id_cliente = f"{nome}_{senha}"  # Gera ID único como nome+senha
-        # Verifica se o cliente já existe
-        response = supabase.table('clientes').select('*').eq('id_cliente', id_cliente).execute()
-        if response.data and len(response.data) > 0:
-            session['autenticado_cliente'] = True
-            session['id_cliente'] = id_cliente
-            session.permanent = True
-            app.permanent_session_lifetime = timedelta(minutes=180)
-            return redirect(url_for('index'))  # Redireciona pra /index
-        else:
-            # Cadastra novo cliente
-            new_client = {'nome': nome, 'senha': senha, 'id_cliente': id_cliente}
-            result = supabase.table('clientes').insert(new_client).execute()
-            if result.data:
+        
+        # Verifica se o nome já existe
+        check_nome = supabase.table('clientes').select('id_cliente, senha').eq('nome', nome).execute()
+        
+        if check_nome.data:
+            # Nome existe, verifica senha para login
+            existing = check_nome.data[0]
+            if existing['senha'] == senha:
                 session['autenticado_cliente'] = True
-                session['id_cliente'] = id_cliente
+                session['id_cliente'] = existing['id_cliente']
                 session.permanent = True
                 app.permanent_session_lifetime = timedelta(minutes=180)
-                return redirect(url_for('index'))  # Redireciona pra /index
-            return render_template('login.html', erro="Erro ao cadastrar", authenticated=False)
+                return redirect(url_for('index'))
+            else:
+                return render_template('login.html', erro="Senha incorreta", authenticated=False)
+        else:
+            # Nome não existe, cadastra novo cliente
+            id_cliente = f"{nome}_{senha}"
+            new_client = {'nome': nome, 'senha': senha, 'id_cliente': id_cliente}
+            try:
+                result = supabase.table('clientes').insert(new_client).execute()
+                if result.data:
+                    session['autenticado_cliente'] = True
+                    session['id_cliente'] = id_cliente
+                    session.permanent = True
+                    app.permanent_session_lifetime = timedelta(minutes=180)
+                    return redirect(url_for('index'))
+                else:
+                    return render_template('login.html', erro="Erro ao cadastrar", authenticated=False)
+            except Exception as e:
+                logging.error(f"Erro ao cadastrar cliente: {str(e)}")
+                return render_template('login.html', erro="Erro ao cadastrar: Nome já pode estar em uso", authenticated=False)
     return render_template('login.html', authenticated=False)
 
 # Rota para o cardápio
@@ -224,7 +236,7 @@ def pagar_comanda():
     return jsonify({"message": "Comanda paga com sucesso"}), 200
 
 # ======================================================
-# *** NOVAS ROTAS PARA ESTOQUE - ADICIONE AQUI ***
+# *** NOVAS ROTAS PARA ESTOQUE ***
 # ======================================================
 
 @app.route('/estoque', methods=['GET'])
