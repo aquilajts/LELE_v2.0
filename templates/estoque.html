@@ -53,7 +53,7 @@
             margin: 10px 0;
         }
         .item-card {
-            background-color: rgba(255,255,255,0.9);
+            background-color: rgba(255,255,255,0.95);
             padding: 10px;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
@@ -63,50 +63,15 @@
             color: #000000;
         }
         .item-card:hover { transform: scale(1.05); }
+        /* ajuste crítico: object-fit para não esticar imagens */
         .item-card img {
             width: 150px;
             height: 150px;
             border-radius: 10px;
+            object-fit: cover;
+            background-color: #f3f4f6; /* cinza claro enquanto carrega */
         }
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
+        .toggle-switch { /* mantém o seu estilo */ }
         .footer {
             background-color: #000000;
             text-align: center;
@@ -130,6 +95,7 @@
             </button>
         </a>
     </div>
+
     <nav>
         {% for categoria in categorias.keys() %}
         <button onclick="showCategoria('{{ categoria }}')">{{ categoria }}</button>
@@ -143,12 +109,32 @@
             <div class="item-row">
                 {% for i in item %}
                 <div class="item-card">
-                    <img src="{{ i.imagem_url }}" style="{% if not i.disponivel %}filter: grayscale(100%);{% endif %}">
+                    {# -------- calcula a src de forma segura -------- #}
+                    {% set img_raw = i.imagem_url or '' %}
+                    {% if img_raw %}
+                        {% if img_raw.startswith('http') %}
+                            {% set src = img_raw %}
+                        {% elif img_raw.startswith('/static/') %}
+                            {% set src = img_raw %}
+                        {% elif img_raw.startswith('static/') %}
+                            {% set src = url_for('static', filename=img_raw[7:]) %}
+                        {% else %}
+                            {% set src = url_for('static', filename=img_raw) %}
+                        {% endif %}
+                    {% else %}
+                        {% set src = url_for('static', filename='default.png') %}
+                    {% endif %}
+                    <img src="{{ src }}"
+                         alt="{{ i.nome }}"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.src='{{ url_for('static', filename='default.png') }}';"
+                         style="{% if not i.disponivel %}filter: grayscale(100%);opacity:0.85;{% endif %}">
                     <h3 style="font-weight: bold; font-size: 18px; margin: 5px 0;">{{ i.nome }}</h3>
                     <p style="font-size: 12px; color: #6B7280; margin: 4px 0;">{{ i.descricao }}</p>
                     <p style="color: #4B5563; font-size: 14px; margin: 5px 0;">R$ {{ '%.2f'|format(i.preco) }}</p>
+
                     <label class="toggle-switch">
-                        <input type="checkbox" {% if i.disponivel %}checked{% endif %} onchange="atualizarDisponibilidade('{{ i.ID }}', this.checked)">
+                        <input type="checkbox" {% if i.disponivel %}checked{% endif %} onchange="atualizarDisponibilidade('{{ i.ID }}', this.checked, event)">
                         <span class="slider"></span>
                     </label>
                     <p style="font-size: 12px; margin-top: 5px;">{% if i.disponivel %}Disponível{% else %}Indisponível{% endif %}</p>
@@ -171,28 +157,26 @@
     <script>
         function showCategoria(categoria) {
             document.querySelectorAll('.categoria').forEach(el => el.style.display = 'none');
-            document.getElementById(categoria).style.display = 'block';
+            const el = document.getElementById(categoria);
+            if (el) el.style.display = 'block';
         }
 
-        async function atualizarDisponibilidade(id, disponivel) {
+        async function atualizarDisponibilidade(id, disponivel, evt) {
+            // evt pode ser undefined se chamado programaticamente
+            const checkbox = evt ? evt.target : null;
             try {
                 const response = await fetch('/estoque/update', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id, disponivel: disponivel })
                 });
                 if (!response.ok) {
                     alert('Erro ao atualizar disponibilidade.');
-                    // Reverter o toggle se falhar
-                    const checkbox = event.target;
-                    checkbox.checked = !checkbox.checked;
+                    if (checkbox) checkbox.checked = !checkbox.checked; // reverte UI
                 }
             } catch (error) {
                 alert('Erro de rede ao atualizar.');
-                const checkbox = event.target;
-                checkbox.checked = !checkbox.checked;
+                if (checkbox) checkbox.checked = !checkbox.checked;
             }
         }
     </script>
