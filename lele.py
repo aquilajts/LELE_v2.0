@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import logging
 import json
 from zoneinfo import ZoneInfo
+import pytz
 
 # Configuração de logging
 logging.basicConfig(level=logging.DEBUG)
@@ -312,13 +313,47 @@ def update_estoque():
 def caixa_relatorio():
     if not session.get('autenticado_funcionario'):
         return redirect(url_for('caixa_funcionario'))
-    
+
     try:
-        # Busca todos os pedidos
-        response = supabase.table('pedidos_finalizados').select('*').order('data_hora', desc=True).execute()
+        # --- filtros vindos da URL ---
+        nome = request.args.get('nome', '').strip()
+        status = request.args.get('status', '').strip()
+        data_inicio = request.args.get('data_inicio', '')
+        data_fim = request.args.get('data_fim', '')
+
+        query = supabase.table('pedidos_finalizados').select('*')
+
+        # filtro por status
+        if status:
+            query = query.eq('status', status)
+
+        # busca por nome
+        if nome:
+            query = query.ilike('nome', f"%{nome}%")
+
+        # busca por intervalo de datas
+        if data_inicio and data_fim:
+            query = query.gte('data_hora', f"{data_inicio} 00:00:00").lte('data_hora', f"{data_fim} 23:59:59")
+        elif data_inicio:
+            query = query.gte('data_hora', f"{data_inicio} 00:00:00")
+        elif data_fim:
+            query = query.lte('data_hora', f"{data_fim} 23:59:59")
+
+        # executa
+        response = query.order('data_hora', desc=True).execute()
         pedidos = response.data or []
 
-        # Totais e métricas simples
+        # ajusta fuso horário para São Paulo
+        tz = pytz.timezone("America/Sao_Paulo")
+        for p in pedidos:
+            if p.get("data_hora"):
+                try:
+                    dt = datetime.fromisoformat(p["data_hora"].replace("Z", "+00:00"))
+                    p["data_hora"] = dt.astimezone(tz).strftime("%d/%m/%Y %H:%M:%S")
+                except:
+                    pass
+
+        # métricas ajustadas
         total_vendido = sum(p.get('total', 0) for p in pedidos)
         total_pedidos = len(pedidos)
         pedidos_pagos = len([p for p in pedidos if p.get('status') == 'Pago'])
@@ -330,7 +365,11 @@ def caixa_relatorio():
             total_vendido=total_vendido,
             total_pedidos=total_pedidos,
             pedidos_pagos=pedidos_pagos,
-            pedidos_abertos=pedidos_abertos
+            pedidos_abertos=pedidos_abertos,
+            nome_filtro=nome,
+            status_filtro=status,
+            data_inicio=data_inicio,
+            data_fim=data_fim
         )
     except Exception as e:
         logging.error(f"Erro ao carregar relatório: {str(e)}")
