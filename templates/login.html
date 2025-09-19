@@ -28,9 +28,16 @@
         .content {
             flex: 1;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
+        }
+        .login-info {
+            text-align: center;
+            color: #FFFFFF;
+            font-size: 1em;
+            margin-bottom: 15px;
         }
         .login-form {
             max-width: 320px;
@@ -98,6 +105,9 @@
 <body>
     <header>CHURRASQUINHO DO LÊLE</header>
     <div class="content">
+        <div class="login-info">
+            Acesso automático disponível. Memorize sua senha para retornos futuros.
+        </div>
         <div class="login-form">
             <h3>Login ou Cadastro</h3>
             <form method="POST">
