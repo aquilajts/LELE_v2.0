@@ -38,6 +38,30 @@
         }
         .stat-card h3 { margin: 0; font-size: 1.2em; }
         .stat-card p { font-size: 1.6em; font-weight: bold; margin-top: 10px; }
+        form.filtros {
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        form.filtros input, form.filtros select, form.filtros button {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #555;
+        }
+        form.filtros button {
+            background: #8B0000;
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        form.filtros button:hover { background: #A52A2A; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -66,6 +90,28 @@
 <body>
     <div class="header">Relatório - Churrasquinho do Lêle</div>
 
+    <!-- 🔎 Filtros -->
+    <form method="GET" class="filtros">
+        <input type="text" name="nome" value="{{ nome_filtro }}" placeholder="Buscar cliente...">
+        
+        <select name="status">
+            <option value="">-- Todos os Status --</option>
+            <option value="Pedido" {% if status_filtro == "Pedido" %}selected{% endif %}>Pedido</option>
+            <option value="Andamento" {% if status_filtro == "Andamento" %}selected{% endif %}>Andamento</option>
+            <option value="Concluido" {% if status_filtro == "Concluido" %}selected{% endif %}>Concluído</option>
+            <option value="Entregue" {% if status_filtro == "Entregue" %}selected{% endif %}>Entregue</option>
+            <option value="Pago" {% if status_filtro == "Pago" %}selected{% endif %}>Pago</option>
+        </select>
+
+        <label>De:</label>
+        <input type="date" name="data_inicio" value="{{ data_inicio }}">
+        <label>Até:</label>
+        <input type="date" name="data_fim" value="{{ data_fim }}">
+
+        <button type="submit">🔍 Buscar</button>
+    </form>
+
+    <!-- 📊 Cards de estatísticas -->
     <div class="stats">
         <div class="stat-card">
             <h3>Total Vendido</h3>
@@ -85,6 +131,7 @@
         </div>
     </div>
 
+    <!-- 📋 Tabela -->
     <table>
         <thead>
             <tr>
