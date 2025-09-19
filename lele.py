@@ -188,20 +188,6 @@ def caixa_minhacomanda():
     num_pedidos = len(pedidos)
     return render_template('minhacomanda.html', pedidos=pedidos, total_gasto=total_gasto, num_pedidos=num_pedidos)
 
-@app.route('/estoque/update', methods=['POST'])
-def update_estoque():
-    try:
-        data = request.get_json()
-        produto_id = data['id']
-        disponivel = data['disponivel']
-        
-        # Atualizar no Supabase
-        supabase.table('produtos').update({'disponivel': disponivel}).eq('id', produto_id).execute()
-        
-        return jsonify({'success': True}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/caixa/funcionario', methods=['GET', 'POST'])
 def caixa_funcionario():
     if request.method == 'POST':
@@ -236,6 +222,79 @@ def pagar_comanda():
     id_cliente = data.get('id_cliente')
     supabase.table('pedidos_finalizados').update({'status': 'Pago'}).eq('id_cliente', id_cliente).execute()
     return jsonify({"message": "Comanda paga com sucesso"}), 200
+
+# ======================================================
+# *** NOVAS ROTAS PARA ESTOQUE - ADICIONE AQUI ***
+# ======================================================
+
+@app.route('/estoque', methods=['GET'])
+def estoque():
+    """Rota para exibir a página de gerenciamento de estoque"""
+    # Verifica se o funcionário está autenticado
+    if not session.get('autenticado_funcionario'):
+        return redirect(url_for('caixa_funcionario'))
+    
+    try:
+        # Carrega todos os itens da tabela 'itens' (mesma tabela do cardápio)
+        response = supabase.table('itens').select('*').execute()
+        itens = response.data or []
+        
+        # Organiza por categoria (mantendo compatibilidade com o cardápio)
+        categorias = {}
+        for item in itens:
+            categoria = item.get('categoria', 'Sem Categoria')
+            if categoria not in categorias:
+                categorias[categoria] = []
+            
+            # Formata o item para o template
+            categorias[categoria].append({
+                'ID': item['ID'],  # Mantém o campo ID existente
+                'nome': item['nome'],
+                'descricao': item.get('descricao', ''),
+                'preco': float(item['preco']),
+                'imagem_url': item.get('imagem', '/static/default.png'),  # Usa campo 'imagem' da sua tabela
+                'disponivel': item.get('disponivel', True)  # Se não existir, assume True
+            })
+        
+        logging.info(f"Carregando estoque com {len(itens)} itens em {len(categorias)} categorias")
+        return render_template('estoque.html', categorias=categorias)
+    
+    except Exception as e:
+        logging.error(f"Erro ao carregar estoque: {str(e)}")
+        # Em caso de erro, redireciona para funcionario com mensagem
+        return redirect(url_for('caixa_funcionario'))
+
+@app.route('/estoque/update', methods=['POST'])
+def update_estoque():
+    """Rota para atualizar a disponibilidade de um item"""
+    try:
+        if not session.get('autenticado_funcionario'):
+            return jsonify({"error": "Funcionário não autenticado"}), 401
+        
+        data = request.get_json()
+        item_id = data.get('id')
+        disponivel = data.get('disponivel', False)
+        
+        if not item_id:
+            return jsonify({"error": "ID do item é obrigatório"}), 400
+        
+        # Atualiza a coluna 'disponivel' na tabela 'itens'
+        response = supabase.table('itens').update({'disponivel': disponivel}).eq('ID', item_id).execute()
+        
+        if response.data:
+            logging.info(f"Item {item_id} atualizado para disponivel={disponivel}")
+            return jsonify({"success": True, "message": "Disponibilidade atualizada"}), 200
+        else:
+            logging.warning(f"Nenhum item atualizado para ID {item_id}")
+            return jsonify({"error": "Item não encontrado"}), 404
+            
+    except Exception as e:
+        logging.error(f"Erro ao atualizar estoque: {str(e)}")
+        return jsonify({"error": "Erro interno do servidor", "detalhe": str(e)}), 500
+
+# ======================================================
+# *** FIM DAS NOVAS ROTAS ***
+# ======================================================
 
 @app.route('/pedidos/meuspedidos', methods=['GET'])
 def meus_pedidos():
