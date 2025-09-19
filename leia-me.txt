@@ -1,3 +1,5 @@
 SECRET_KEY > churrasquinho_lele_v2_fixed_key_2025
 SUPABASE_KEY > eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1heGRxeWNvaHNvcGdlYWNweW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5ODY5MzEsImV4cCI6MjA2NzU2MjkzMX0.Noj3VmkV3zJ3iRlptetkIzL9g_-ZU4wx_gnhzLMFyMA
 SUPABASE_URL > https://maxdqycohsopgeacpyoy.supabase.co
+senhageral:cecilele25
+senhadono:gabilelececi
