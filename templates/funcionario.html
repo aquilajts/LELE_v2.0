@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Churrasquinho do Lêle - Funcionário</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: url('/static/wallpaperhorizontal.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #FFFFFF;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            color: #FFFFFF;
+            font-size: 2.5em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .button-group button {
+            background-color: #FFFFFF;
+            color: #8B0000;
+            border: none;
+            padding: 20px 40px;
+            margin: 10px 0;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px;
+            width: 250px;
+            text-align: center;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+        .button-group button:hover {
+            background-color: #D1D5DB;
+            transform: scale(1.05);
+        }
+        .login-form {
+            text-align: center;
+        }
+        .login-form input {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #8B0000;
+        }
+        .login-form button {
+            background-color: #8B0000;
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .login-form button:hover {
+            background-color: #A52A2A;
+        }
+        .error { color: red; font-size: 14px; }
+        .footer {
+            background-color: #000000;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+        .footer a {
+            color: #FFFFFF;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        @media (max-width: 600px) {
+            .button-group button { width: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">CHURRASQUINHO DO LELE - FUNCIONÁRIO</div>
+    <div style="position: absolute; top: 10px; right: 10px;">
+        <a href="/index" title="Voltar para Home">
+            <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
+                <i class="fas fa-house" style="font-size: 20px;"></i>
+            </button>
+        </a>
+    </div>
+    <div class="content">
+        {% if not autenticado %}
+            <div class="login-form">
+                <form method="POST">
+                    <input type="password" name="senha" placeholder="Digite a senha" required>
+                    <button type="submit">Entrar</button>
+                </form>
+                {% if erro %}
+                    <p class="error">{{ erro }}</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="button-group">
+                <a href="/caixa/funcionario/recebimento"><button>Caixa - Clientes</button></a>
+                <button>Relatórios</button>
+                <button>Estoque</button>
+                <button>Usuários</button>
+                <button>Configurações</button>
+            </div>
+        {% endif %}
+    </div>
+    <div class="footer">
+        <a href="https://www.instagram.com/churrasquinhodolele027" target="_blank">
+            @churrasquinhodolele027
+        </a><br>
+        ABERTO DE 17:30 AS 00:30<br>
+        SEGUNDA A SEXTA
+    </div>
+</body>
+</html>

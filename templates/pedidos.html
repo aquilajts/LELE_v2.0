@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Churrasquinho do Lêle - Pedidos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background: url('static/wallpaperhorizontal.png') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: #FFFFFF;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            font-family: 'Lucida Bright', serif;
+            font-weight: bold;
+            font-size: 2em;
+            color: #FFFFFF;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        nav {
+            background-color: rgba(139,0,0,0.9);
+            padding: 10px;
+            text-align: center;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        nav button {
+            background-color: #8B0000;
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            min-width: 48px;
+            min-height: 48px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        nav button:hover {
+            transform: scale(1.05);
+            background-color: #A52A2A;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+        .pedido-card {
+            background: rgba(255,255,255,0.9);
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            cursor: default;
+            transition: transform 0.2s;
+            animation: fadeIn 0.5s;
+            color: #000000;
+        }
+        .pedido-card:hover { transform: scale(1.02); }
+        .pedido-header { font-weight: bold; font-size: 16px; }
+        .pedido-card.realizado { border-left: 5px solid #FF0000; }
+        .pedido-card.andamento { border-left: 5px solid #FFD700; }
+        .pedido-card.entregue { border-left: 5px solid #008000; }
+        .footer {
+            background-color: #000000;
+            text-align: center;
+            padding: 12px;
+            font-size: 0.9em;
+            margin-top: auto;
+        }
+        .footer a {
+            color: #FFCD00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <header>CHURRASQUINHO DO LÊLE - PEDIDOS</header>
+    <div style="position: absolute; top: 10px; right: 10px;">
+        <a href="/index" title="Voltar para Home">
+            <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
+                <i class="fas fa-house" style="font-size: 20px;"></i>
+            </button>
+        </a>
+    </div>
+    <nav>
+        <button onclick="window.location.href='/pedidos/meuspedidos'">Meus Pedidos</button>
+        <button onclick="window.location.href='/pedidos/lele'">Acesso Lêle</button>
+    </nav>
+    <div class="content">
+        <h2>Pedidos Finalizados</h2>
+        <div id="lista-pedidos"></div>
+    </div>
+
+    <div class="footer">
+        <a href="https://www.instagram.com/churrasquinhodolele027" target="_blank">
+            @churrasquinhodolele027
+        </a><br>
+        ABERTO DE 17:30 AS 00:30<br>
+        SEGUNDA A SEXTA
+    </div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseUrl = "https://yjnllybdlxswmbkwzcma.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqbmxseWJkbHhzd21ia3d6Y21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5ODY3NTcsImV4cCI6MjA2NzU2Mjc1N30.gEPiA8YJlLpQIaGNORrAyJY-_Vq89nS9py-3IWKnv98";
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+</script>
+
+<script>
+async function carregarPedidos() {
+    const container = document.getElementById('lista-pedidos');
+    container.innerHTML = '';
+
+    const pedidos = {{ pedidos | tojson }};
+    
+    pedidos.forEach(p => {
+        const div = document.createElement('div');
+        let statusClass = '';
+        if (p.status === 'Pedido Realizado') statusClass = 'realizado';
+        else if (p.status === 'Em Andamento') statusClass = 'andamento';
+        else if (p.status === 'Entregue') statusClass = 'entregue';
+        div.className = `pedido-card ${statusClass}`;
+        const time = new Date(p.data_hora).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+        div.innerHTML = `
+            <div class="pedido-header">
+                Pedido Nº ${p.pedido_numero} - Mesa ${p.mesa} - ${p.status} - ${time}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', carregarPedidos);
+</script>
+
+</body>
+</html>

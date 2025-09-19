@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Churrasquinho do Lêle - Login</title>
+    <style>
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background: url('static/wallpaperhorizontal.png') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: #FFFFFF;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            font-family: 'Lucida Bright', serif;
+            font-weight: bold;
+            font-size: 2.2em;
+            color: #FFFFFF;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .login-form {
+            max-width: 320px;
+            width: 100%;
+            padding: 20px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            color: #000000;
+            animation: fadeIn 0.5s;
+        }
+        .login-form h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #8B0000;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #4B5563;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #8B0000;
+            color: #FFFFFF;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1em;
+            font-weight: bold;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+            background-color: #A52A2A;
+        }
+        .erro {
+            color: red;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .footer {
+            background-color: #000000;
+            text-align: center;
+            padding: 12px;
+            font-size: 0.9em;
+            margin-top: auto;
+        }
+        .footer a {
+            color: #FFCD00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            .login-form { width: 90%; }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <header>CHURRASQUINHO DO LÊLE</header>
+    <div class="content">
+        <div class="login-form">
+            <h3>Login ou Cadastro</h3>
+            <form method="POST">
+                <input type="text" name="nome" placeholder="Seu Nome" required>
+                <input type="password" name="senha" placeholder="Senha (mín. 6 dígitos)" required>
+                <button type="submit">Entrar / Cadastrar</button>
+            </form>
+            {% if erro %}
+                <p class="erro">{{ erro }}</p>
+            {% endif %}
+            <button onclick="window.location.href='/pedidos/lele'" style="margin-top: 12px;">
+                Acesso Lêle (Interno)
+            </button>
+        </div>
+    </div>
+    <div class="footer">
+        <a href="https://www.instagram.com/churrasquinhodolele027" target="_blank">
+            @churrasquinhodolele027
+        </a><br>
+        ABERTO DE 17:30 AS 00:30<br>
+        SEGUNDA A SEXTA
+    </div>
+</body>
+</html>

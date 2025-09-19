@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Churrasquinho do Lêle - Recebimento</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: url('/static/wallpaperhorizontal.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #FFFFFF;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            color: #FFFFFF;
+            font-size: 2.5em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+        .comanda-card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            color: #000000;
+        }
+        .comanda-header {
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .comanda-header h3 { margin: 0; font-size: 18px; color: #8B0000; }
+        .comanda-content { display: none; padding-top: 10px; }
+        .comanda-card.expanded .comanda-content { display: block; }
+        .pedido-detalhes { font-size: 14px; margin-bottom: 10px; }
+        .pedido-detalhes .status.realizado { color: #DC2626; }
+        .pedido-detalhes .status.empreparo { color: #F59E0B; }
+        .pedido-detalhes .status.preparado { color: #10B981; }
+        .pedido-detalhes .status.entregue { color: #8B5CF6; }
+        .pedido-detalhes .status.pago { color: #000000; font-weight: bold; }
+        .produto-list { margin-left: 20px; }
+        .pagar-btn {
+            background-color: #000000;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .pagar-btn:hover { background-color: #333333; }
+        .footer {
+            background-color: #000000;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+        .footer a {
+            color: #FFFFFF;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        @media (max-width: 600px) {
+            .comanda-card { width: 90%; margin: 10px auto; }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.comanda-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const card = header.parentElement;
+                    card.classList.toggle('expanded');
+                });
+            });
+        });
+
+        async function pagarComanda(id_cliente) {
+            const response = await fetch('/caixa/funcionario/pagar_comanda', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_cliente })
+            });
+            if (response.ok) {
+                alert('Comanda paga!');
+                location.reload();
+            } else {
+                const data = await response.json();
+                alert(data.error || 'Erro ao pagar comanda');
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="header">CHURRASQUINHO DO LELE - RECEBIMENTO</div>
+    <div style="position: absolute; top: 10px; right: 10px;">
+        <a href="/index" title="Voltar para Home">
+            <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
+                <i class="fas fa-house" style="font-size: 20px;"></i>
+            </button>
+        </a>
+    </div>
+    <div class="content">
+        {% for id_cliente, grupo in grupos %}
+            <div class="comanda-card">
+                <div class="comanda-header">
+                    <h3>Comanda {{ id_cliente }} - Total: R$ {{ grupo.total | round(2) }}</h3>
+                </div>
+                <div class="comanda-content">
+                    {% for pedido in grupo.pedidos %}
+                        <div class="pedido-detalhes">
+                            <p><strong>Pedido #{{ pedido.pedido_numero }}</strong></p>
+                            <p>Horário: {{ pedido.data_hora[:10]|replace('-', '/') }} - {{ pedido.data_hora[11:16] }}</p>
+                            <p>Status: <span class="status {{ pedido.status | replace(' ', '') | lower }}">{{ pedido.status }}</span></p>
+                            <div class="produto-list">
+                                <p>Produtos:</p>
+                                <ul>
+                                    {% for produto in pedido.produto %}
+                                        <li>{{ produto }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <p>Valor: R$ {{ pedido.total | round(2) }}</p>
+                            {% if pedido.descricao %}
+                                <p>Descrição: {{ pedido.descricao }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <button class="pagar-btn" onclick="pagarComanda('{{ id_cliente }}')">Pedido Pago</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="footer">
+        <a href="https://www.instagram.com/churrasquinhodolele027" target="_blank">
+            @churrasquinhodolele027
+        </a><br>
+        ABERTO DE 17:30 AS 00:30<br>
+        SEGUNDA A SEXTA
+    </div>
+</body>
+</html>
