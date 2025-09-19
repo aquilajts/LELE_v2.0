@@ -3,10 +3,10 @@ from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import pytz
 import logging
 import json
 from zoneinfo import ZoneInfo
-import pytz
 
 # Configuração de logging
 logging.basicConfig(level=logging.DEBUG)
