@@ -243,11 +243,7 @@ def pagar_comanda():
     supabase.table('pedidos_finalizados').update({'status': 'Pago'}).eq('id_cliente', id_cliente).execute()
     return jsonify({"message": "Comanda paga com sucesso"}), 200
 
-# ======================================================
-# *** NOVAS ROTAS PARA ESTOQUE ***
-# ======================================================
-
-@app.route('/estoque', methods=['GET'])
+@app.route('/caixa/funcionario/estoque', methods=['GET'])
 def estoque():
     """Rota para exibir a página de gerenciamento de estoque"""
     # Verifica se o funcionário está autenticado
@@ -312,9 +308,34 @@ def update_estoque():
         logging.error(f"Erro ao atualizar estoque: {str(e)}")
         return jsonify({"error": "Erro interno do servidor", "detalhe": str(e)}), 500
 
-# ======================================================
-# *** FIM DAS NOVAS ROTAS ***
-# ======================================================
+@app.route('/caixa/funcionario/relatorio', methods=['GET'])
+def caixa_relatorio():
+    if not session.get('autenticado_funcionario'):
+        return redirect(url_for('caixa_funcionario'))
+    
+    try:
+        # Busca todos os pedidos
+        response = supabase.table('pedidos_finalizados').select('*').order('data_hora', desc=True).execute()
+        pedidos = response.data or []
+
+        # Totais e métricas simples
+        total_vendido = sum(p.get('total', 0) for p in pedidos)
+        total_pedidos = len(pedidos)
+        pedidos_pagos = len([p for p in pedidos if p.get('status') == 'Pago'])
+        pedidos_abertos = total_pedidos - pedidos_pagos
+
+        return render_template(
+            'relatorio.html',
+            pedidos=pedidos,
+            total_vendido=total_vendido,
+            total_pedidos=total_pedidos,
+            pedidos_pagos=pedidos_pagos,
+            pedidos_abertos=pedidos_abertos
+        )
+    except Exception as e:
+        logging.error(f"Erro ao carregar relatório: {str(e)}")
+        return render_template('relatorio.html', pedidos=[], total_vendido=0, total_pedidos=0, pedidos_pagos=0, pedidos_abertos=0)
+
 
 @app.route('/pedidos/meuspedidos', methods=['GET'])
 def meus_pedidos():
