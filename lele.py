@@ -188,6 +188,20 @@ def caixa_minhacomanda():
     num_pedidos = len(pedidos)
     return render_template('minhacomanda.html', pedidos=pedidos, total_gasto=total_gasto, num_pedidos=num_pedidos)
 
+@app.route('/estoque/update', methods=['POST'])
+def update_estoque():
+    try:
+        data = request.get_json()
+        produto_id = data['id']
+        disponivel = data['disponivel']
+        
+        # Atualizar no Supabase
+        supabase.table('produtos').update({'disponivel': disponivel}).eq('id', produto_id).execute()
+        
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/caixa/funcionario', methods=['GET', 'POST'])
 def caixa_funcionario():
     if request.method == 'POST':
