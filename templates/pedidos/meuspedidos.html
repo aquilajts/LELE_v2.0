@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Churrasquinho do Lêle - Meus Pedidos</title>]
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background: url('/static/wallpaperhorizontal.png') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: #FFFFFF;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            font-family: 'Lucida Bright', serif;
+            font-weight: bold;
+            font-size: 2em;
+            color: #FFFFFF;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+        .pedido-card {
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #8B0000;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+            overflow: hidden;
+            color: #000000;
+        }
+        .pedido-card:hover {
+            transform: scale(1.02);
+        }
+        .pedido-card-header {
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .pedido-card-header h3 { margin: 0; font-size: 18px; }
+        .pedido-card-content { display: none; padding-top: 10px; color: #4B5563; }
+        .pedido-card.expanded .pedido-card-content { display: block; }
+        .produto-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px 0;
+            white-space: nowrap;
+        }
+        .produto-item { min-width: 150px; text-align: left; }
+        .details { font-size: 14px; }
+        .highlight { color: #8B0000; font-weight: bold; }
+        .footer {
+            background-color: #000000;
+            text-align: center;
+            padding: 12px;
+            font-size: 0.9em;
+            margin-top: auto;
+        }
+        .footer a {
+            color: #FFCD00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.pedido-card-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const card = header.parentElement;
+                    card.classList.toggle('expanded');
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <header>CHURRASQUINHO DO LÊLE - MEUS PEDIDOS</header>
+    <div style="position: absolute; top: 10px; right: 10px;">
+    <a href="/index" title="Voltar para Home">
+        <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
+            <i class="fas fa-house" style="font-size: 20px;"></i>
+        </button>
+    </a>
+    </div>
+    <div class="content">
+        {% if not pedidos %}
+            <p>Nenhum pedido encontrado.</p>
+        {% else %}
+            {% for pedido in pedidos | sort(reverse=true, attribute='data_hora') %}
+                {% set data = pedido.data_hora[:10]|replace('-', '/') ~ ' - ' ~ pedido.data_hora[11:16] %}
+                <div class="pedido-card">
+                    <div class="pedido-card-header">
+                        <h3 class="highlight">Pedido Nº {{ pedido.pedido_numero }}</h3>
+                        <span class="details">{{ data }} | Status: <span class="highlight">{{ pedido.status }}</span></span>
+                    </div>
+                    <div class="pedido-card-content">
+                        <p class="details">Mesa: {{ pedido.mesa }} | Contato: {{ pedido.contato }}</p>
+                        <div class="produto-scroll">
+                            {% for produto in pedido.produto %}
+                                <div class="produto-item">
+                                    <p>{{ produto }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <p class="details">Total: R$ {{ pedido.total }}</p>
+                        {% if pedido.descricao %}<p class="details">Observações: {{ pedido.descricao }}</p>{% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <div class="footer">
+        <a href="https://www.instagram.com/churrasquinhodolele027" target="_blank">
+            @churrasquinhodolele027
+        </a><br>
+        ABERTO DE 17:30 AS 00:30<br>
+        SEGUNDA A SEXTA
+    </div>
+</body>
+</html>
