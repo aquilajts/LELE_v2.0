@@ -1,0 +1,47 @@
+```
+       body {
+           background-color: #F5F5F5;
+           font-family: 'Helvetica', sans-serif;
+       }
+       .categorias button {
+           background-color: #8B0000;
+           color: #FFFFFF;
+           padding: 10px 20px;
+           border: none;
+           border-radius: 5px;
+           margin: 5px;
+           cursor: pointer;
+           transition: transform 0.2s;
+       }
+       .categorias button:hover {
+           transform: scale(1.05);
+       }
+       .item-card {
+           background-color: #FFFFFF;
+           padding: 10px;
+           margin: 10px;
+           border-radius: 10px;
+           box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+       }
+       .item-card button {
+           background-color: #8B0000;
+           color: #FFFFFF;
+           border: none;
+           border-radius: 5px;
+           padding: 5px 10px;
+           cursor: pointer;
+       }
+       .item-card button:disabled {
+           background-color: #D1D5DB;
+           cursor: not-allowed;
+       }
+       @media (max-width: 600px) {
+           .categorias {
+               overflow-x: auto;
+               white-space: nowrap;
+           }
+           .item-card {
+               width: 100%;
+           }
+       }
+       ```
