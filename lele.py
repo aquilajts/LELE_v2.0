@@ -1,0 +1,295 @@
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from supabase import create_client, Client
+import os
+from dotenv import load_dotenv
+from datetime import datetime, timedelta
+import logging
+import json
+from zoneinfo import ZoneInfo
+
+# Configuração de logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Carrega variáveis de ambiente
+load_dotenv()
+
+# Inicializa o Flask
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'churrasquinho_lele_fixed_key_2025')  # Adicione SECRET_KEY no Render env pra segurança
+
+# Configura o Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+@app.route('/')
+def home():
+    return redirect(url_for('login'))
+
+@app.route('/index', methods=['GET'])
+def index():
+    logging.debug(f"Session check in /index: {session.get('autenticado_cliente')}")
+    if not session.get('autenticado_cliente'):
+        return redirect(url_for('login'))
+    # Checa tempo de sessão
+    last_access = session.get('last_access')
+    if last_access:
+        if datetime.now(ZoneInfo("America/Sao_Paulo")) - last_access > timedelta(minutes=180):
+            session.clear()
+            return redirect(url_for('login'))
+    session['last_access'] = datetime.now(ZoneInfo("America/Sao_Paulo"))
+    return render_template('index.html', session_script="sessionStorage.setItem('autenticado_cliente', 'true');")
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        senha = request.form.get('senha')
+        if len(senha) < 6:
+            return render_template('login.html', erro="Senha deve ter pelo menos 6 dígitos", authenticated=False)
+        id_cliente = f"{nome}_{senha}"  # Gera ID único como nome+senha
+        # Verifica se o cliente já existe
+        response = supabase.table('clientes').select('*').eq('id_cliente', id_cliente).execute()
+        if response.data and len(response.data) > 0:
+            session['autenticado_cliente'] = True
+            session['id_cliente'] = id_cliente
+            session.permanent = True
+            app.permanent_session_lifetime = timedelta(minutes=180)
+            return redirect(url_for('index'))  # Redireciona pra /index
+        else:
+            # Cadastra novo cliente
+            new_client = {'nome': nome, 'senha': senha, 'id_cliente': id_cliente}
+            result = supabase.table('clientes').insert(new_client).execute()
+            if result.data:
+                session['autenticado_cliente'] = True
+                session['id_cliente'] = id_cliente
+                session.permanent = True
+                app.permanent_session_lifetime = timedelta(minutes=180)
+                return redirect(url_for('index'))  # Redireciona pra /index
+            return render_template('login.html', erro="Erro ao cadastrar", authenticated=False)
+    return render_template('login.html', authenticated=False)
+
+# Rota para o cardápio
+@app.route('/cardapio', methods=['GET'])
+def cardapio():
+    mesa = request.args.get('mesa', default='1', type=str)
+    response = supabase.table('itens').select('*').execute()
+    itens = response.data
+    categorias = {}
+    for item in itens:
+        categoria = item['categoria']
+        if categoria not in categorias:
+            categorias[categoria] = []
+        item['imagem'] = item.get('imagem', 'default.png')
+        categorias[categoria].append(item)
+    return render_template('cardapio.html', categorias=categorias, mesa=mesa)
+
+@app.route('/enviar_pedido', methods=['POST'])
+def enviar_pedido():
+    try:
+        if not session.get('autenticado_cliente'):
+            return jsonify({"error": "Usuário não logado, faça login primeiro"}), 401
+
+        data = request.json
+        mesa = data.get('mesa')
+        contato = data.get('contato')
+        observacoes = data.get('observacoes', '')
+        itens = data.get('produto')
+        total = data.get('total', 0)
+
+        if not all([mesa, contato, itens]) or len(itens) == 0:
+            return jsonify({"error": "Mesa, contato e itens são obrigatórios"}), 400
+
+        nomes_produtos = []
+        for item in itens:
+            item_id = item['id']
+            quantidade = item['quantidade']
+            response_item = supabase.table('itens').select('nome, preco').eq('ID', item_id).execute()
+            if not response_item.data:
+                logging.warning(f"Item {item_id} não encontrado no Supabase")
+                return jsonify({"error": f"Item {item_id} não encontrado"}), 404
+        
+            item_data = response_item.data[0]
+            nome_produto = item_data['nome']
+            preco_unit = item_data['preco']
+            sabor = item.get('sabor', '')
+            display_nome = f"{nome_produto} ({sabor}) - R$ {preco_unit}" if sabor else f"{nome_produto} - R$ {preco_unit}"
+            nomes_produtos.append(display_nome)
+        
+        # Recalcula total se necessário
+        if total == 0:
+            total = sum(item_data['preco'] * quantidade for item in itens for item_data in supabase.table('itens').select('preco').eq('ID', item['id']).execute().data)
+
+        # Buscar nome do cliente logado
+        id_cliente = session.get('id_cliente')
+        response_cliente = supabase.table('clientes').select('nome').eq('id_cliente', id_cliente).execute()
+        nome_cliente = response_cliente.data[0]['nome'] if response_cliente.data else 'Cliente Desconhecido'
+        
+        pedido = {
+            'mesa': mesa,
+            'nome': nome_cliente,  # Preenchido com nome do cliente
+            'contato': contato,
+            'produto': nomes_produtos,
+            'total': total,
+            'status': 'Pedido Realizado',
+            'descricao': observacoes,
+            'data_hora': datetime.now(ZoneInfo("America/Sao_Paulo")).isoformat(),
+            'id_cliente': id_cliente
+        }
+        response_insert = supabase.table('pedidos_finalizados').insert(pedido).execute()
+
+        if not response_insert.data:
+            logging.error(f"Erro no insert Supabase: {response_insert.text}")
+            return jsonify({"error": "Falha ao inserir pedido", "detalhe": response_insert.text}), 500
+
+        return jsonify({
+            "message": "Pedido enviado com sucesso",
+            "pedido_id": response_insert.data[0]['pedido_numero']
+        }), 201
+
+    except Exception as e:
+        logging.error(f"Erro ao enviar pedido: {str(e)}")
+        return jsonify({"error": "Erro interno no servidor", "detalhe": str(e)}), 500
+
+# Rota para o painel de pedidos (somente finalizados)
+@app.route('/pedidos', methods=['GET'])
+def pedidos():
+    try:
+        response = supabase.table('pedidos_finalizados').select('*').order('pedido_numero', desc=True).execute()
+        pedidos = response.data or []
+
+        # Desserializa a lista de produtos
+        for p in pedidos:
+            if isinstance(p.get('produto'), str):
+                p['produto'] = json.loads(p['produto'])
+        
+        return render_template('pedidos.html', pedidos=pedidos)
+    except Exception as e:
+        logging.error(f"Erro ao carregar pedidos: {str(e)}")
+        return render_template('pedidos.html', pedidos=[]), 500
+        
+# Rota para informações
+@app.route('/informacoes', methods=['GET'])
+def informacoes():
+    return render_template('informacoes.html')
+
+@app.route('/caixa', methods=['GET'])
+def caixa():
+    return render_template('caixa.html')
+
+@app.route('/caixa/minhacomanda', methods=['GET'])
+def caixa_minhacomanda():
+    if not session.get('autenticado_cliente'):
+        return redirect(url_for('login'))
+    id_cliente = session.get('id_cliente')
+    response = supabase.table('pedidos_finalizados').select('*').eq('id_cliente', id_cliente).order('data_hora', desc=True).execute()
+    pedidos = response.data or []
+    total_gasto = sum(p['total'] for p in pedidos)
+    num_pedidos = len(pedidos)
+    return render_template('minhacomanda.html', pedidos=pedidos, total_gasto=total_gasto, num_pedidos=num_pedidos)
+
+@app.route('/caixa/funcionario', methods=['GET', 'POST'])
+def caixa_funcionario():
+    if request.method == 'POST':
+        senha = request.form.get('senha')
+        if senha == 'cecilele25':  # Senha fixa
+            session['autenticado_funcionario'] = True
+            return redirect(url_for('caixa_funcionario'))
+        else:
+            return render_template('funcionario.html', erro="Senha incorreta", autenticado=False)
+    autenticado = session.get('autenticado_funcionario', False)
+    return render_template('funcionario.html', erro=None, autenticado=autenticado)
+
+@app.route('/caixa/funcionario/recebimento', methods=['GET'])
+def caixa_recebimento():
+    if not session.get('autenticado_funcionario'):
+        return redirect(url_for('caixa_funcionario'))
+    response = supabase.table('pedidos_finalizados').select('*').order('data_hora', desc=True).execute()
+    pedidos = response.data or []
+    # Agrupar por id_cliente
+    grupos = {}
+    for p in pedidos:
+        id_c = p['id_cliente']
+        if id_c not in grupos:
+            grupos[id_c] = {'pedidos': [], 'total': 0}
+        grupos[id_c]['pedidos'].append(p)
+        grupos[id_c]['total'] += p.get('total', 0)  # Usa 0 se total não existir
+    return render_template('recebimento.html', grupos=grupos.items())
+
+@app.route('/caixa/funcionario/pagar_comanda', methods=['POST'])
+def pagar_comanda():
+    data = request.json
+    id_cliente = data.get('id_cliente')
+    supabase.table('pedidos_finalizados').update({'status': 'Pago'}).eq('id_cliente', id_cliente).execute()
+    return jsonify({"message": "Comanda paga com sucesso"}), 200
+
+@app.route('/pedidos/meuspedidos', methods=['GET'])
+def meus_pedidos():
+    if not session.get('autenticado_cliente'):
+        return redirect(url_for('login'))
+    id_cliente = session.get('id_cliente')
+    response = supabase.table('pedidos_finalizados').select('*').eq('id_cliente', id_cliente).execute()
+    pedidos = response.data or []
+    return render_template('pedidos/meuspedidos.html', pedidos=pedidos)
+
+# rota para pedidos/lele
+@app.route('/pedidos/lele', methods=['GET', 'POST'])
+def pedidos_lele():
+    logging.debug(f"Request method: {request.method}, Session: {session.get('autenticado_lele')}")
+    if request.method == 'POST':
+        senha = request.form.get('senha')
+        if senha == 'cecilele25': 
+            session['autenticado_lele'] = True
+            session.permanent = True  # Marca session como permanente
+            app.permanent_session_lifetime = timedelta(minutes=600)  # Session válida por 10 horas
+            return redirect(url_for('pedidos_lele'))
+        return render_template('pedidos/lele.html', erro="Senha incorreta", pedidos=[], authenticated=False)
+    elif session.get('autenticado_lele') is True:
+        response = supabase.table('pedidos_finalizados').select('*').order('pedido_numero', desc=True).execute()
+        logging.debug(f"Response data: {response.data}")
+        pedidos = response.data or []
+        for p in pedidos:
+            if p.get('produto') is None:
+                p['produto'] = []
+            elif isinstance(p.get('produto'), str):
+                try:
+                    p['produto'] = json.loads(p['produto'])
+                except json.JSONDecodeError:
+                    p['produto'] = []
+            # Já array, mantém
+        logging.info(f"Carregando {len(pedidos)} pedidos pra template")
+        return render_template('pedidos/lele.html', pedidos=pedidos, authenticated=True)
+    return render_template('pedidos/lele.html', pedidos=[], authenticated=False)
+    
+# rota para atualização de status
+@app.route('/update_status/<int:pedido_numero>', methods=['POST'])
+def update_status(pedido_numero):
+    data = request.get_json()
+    new_status = data.get('status')
+    valid_statuses = ['Em Preparo', 'Preparado', 'Entregue']
+    if new_status in valid_statuses:
+        supabase.table('pedidos_finalizados').update({'status': new_status}).eq('pedido_numero', pedido_numero).execute()
+        return '', 200
+    return '', 400
+    
+# rota para apagar pedidos
+@app.route('/delete_pedido/<int:pedido_numero>', methods=['DELETE'])
+def delete_pedido(pedido_numero):
+    response = supabase.table('pedidos_finalizados').delete().eq('pedido_numero', pedido_numero).execute()
+    if response.data:
+        logging.info(f"Pedido {pedido_numero} excluído")
+        return jsonify({"message": "Pedido excluído"}), 200
+    return jsonify({"error": "Falha ao excluir", "detalhe": str(response.error)}), 500
+
+# Rota /pedidos/lele_data (pra simulação, substitua por /pedidos/lele depois)
+@app.route('/pedidos/lele_data', methods=['GET'])
+def pedidos_lele_data():
+    response = supabase.table('pedidos_finalizados').select('*').order('pedido_numero', desc=True).execute()
+    pedidos = response.data or []
+    for p in pedidos:
+        if isinstance(p.get('produto'), str):
+            p['produto'] = json.loads(p['produto']) if p['produto'] else []
+    return jsonify(pedidos)
+    
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
