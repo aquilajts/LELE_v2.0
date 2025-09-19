@@ -43,16 +43,19 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        nome = request.form.get('nome').strip()
+        nome_input = request.form.get('nome').strip()
         senha = request.form.get('senha')
         if len(senha) < 6:
             return render_template('login.html', erro="Senha deve ter pelo menos 6 dígitos", authenticated=False)
         
-        # Verifica se o nome já existe
-        check_nome = supabase.table('clientes').select('id_cliente, senha').eq('nome', nome).execute()
+        # Normaliza nome para minúsculas para verificação case-insensitive
+        nome_lower = nome_input.lower()
+        
+        # Verifica se o nome (case-insensitive) já existe
+        check_nome = supabase.table('clientes').select('id_cliente, senha, nome').eq('nome_lower', nome_lower).execute()
         
         if check_nome.data:
-            # Nome existe, verifica senha para login
+            # Nome existe (case-insensitive), verifica senha
             existing = check_nome.data[0]
             if existing['senha'] == senha:
                 session['autenticado_cliente'] = True
@@ -63,9 +66,14 @@ def login():
             else:
                 return render_template('login.html', erro="Senha incorreta", authenticated=False)
         else:
-            # Nome não existe, cadastra novo cliente
-            id_cliente = f"{nome}_{senha}"
-            new_client = {'nome': nome, 'senha': senha, 'id_cliente': id_cliente}
+            # Nome não existe, cadastra novo com nome_lower e nome original
+            id_cliente = f"{nome_lower}_{senha}"
+            new_client = {
+                'nome': nome_input,  # Armazena nome original para exibição
+                'nome_lower': nome_lower,  # Campo auxiliar para buscas case-insensitive
+                'senha': senha,
+                'id_cliente': id_cliente
+            }
             try:
                 result = supabase.table('clientes').insert(new_client).execute()
                 if result.data:
