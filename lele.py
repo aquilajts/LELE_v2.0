@@ -411,8 +411,8 @@ def update_estoque():
         logging.error(f"Erro ao atualizar estoque: {str(e)}")
         return jsonify({"error": "Erro interno do servidor", "detalhe": str(e)}), 500
 
-@app.route('/caixa/funcionario/relatorio', methods=['GET'])
-def caixa_relatorio():
+@app.route('/caixa/funcionario/relatoriofinanceiro', methods=['GET'])
+def caixa_relatoriofinanceiro():
     if not session.get('autenticado_funcionario'):
         return redirect(url_for('caixa_funcionario'))
 
@@ -462,7 +462,7 @@ def caixa_relatorio():
         pedidos_abertos = total_pedidos - pedidos_pagos
 
         return render_template(
-            'relatorio.html',
+            'relatoriofinanceiro.html',
             pedidos=pedidos,
             total_vendido=total_vendido,
             total_pedidos=total_pedidos,
@@ -475,7 +475,7 @@ def caixa_relatorio():
         )
     except Exception as e:
         logging.error(f"Erro ao carregar relatório: {str(e)}")
-        return render_template('relatorio.html', pedidos=[], total_vendido=0, total_pedidos=0, pedidos_pagos=0, pedidos_abertos=0)
+        return render_template('relatoriofinanceiro.html', pedidos=[], total_vendido=0, total_pedidos=0, pedidos_pagos=0, pedidos_abertos=0)
 
 
 @app.route('/pedidos/meuspedidos', methods=['GET'])
