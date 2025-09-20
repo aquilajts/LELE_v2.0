@@ -179,7 +179,7 @@
             <div class="comanda-card">
                 {% set nome_cliente = grupo.pedidos[0].nome %}
                 {% set pedido_antigo = grupo.pedidos|sort(attribute='data_hora')|first %}
-                {% set total_com_desconto = grupo.total - (grupo.desconto or 0) %}
+                {% set total_com_desconto = grupo.total - (grupo.desconto or 0) - (grupo.dividir1 or 0) - (grupo.dividir2 or 0) %}
                 <div class="comanda-header">
                     <h3>{{ nome_cliente }} - Total: R$ {{ total_com_desconto | round(2) }}</h3>
                     <small style="color: #8B0000;">- {{ pedido_antigo.data_hora[:10]|replace('-', '/') }} {{ pedido_antigo.data_hora[11:16] }}</small>
