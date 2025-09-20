@@ -477,8 +477,8 @@ def caixa_relatoriofinanceiro():
         logging.error(f"Erro ao carregar relatório: {str(e)}")
         return render_template('relatoriofinanceiro.html', pedidos=[], total_vendido=0, total_pedidos=0, pedidos_pagos=0, pedidos_abertos=0)
 
-@app.route('/relatorio/vendas', methods=['GET'])
-def relatorio_vendas():
+@app.route('/caixa/funcionario/relatoriodevendas', methods=['GET'])
+def caixa_relatoriodevendas():
     if not session.get('autenticado_funcionario'):
         return redirect(url_for('caixa_funcionario'))
 
