@@ -91,6 +91,30 @@
             margin: 5px;
             cursor: pointer;
         }
+        .obs-section {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .obs-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #4B5563;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .obs-btn {
+            background-color: #8B0000;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .obs-btn:hover {
+            transform: scale(1.05);
+        }
         .footer {
             background-color: #000000;
             text-align: center;
@@ -176,14 +200,17 @@
             container.innerHTML = '';
             const pedidosData = typeof pedidos === 'string' ? JSON.parse(pedidos) : pedidos;
 
-            if (pedidosData.length === 0) {
+            // Filtrar pedidos para excluir os com status 'Pago'
+            const pedidosFiltrados = pedidosData.filter(p => p.status !== 'Pago');
+
+            if (pedidosFiltrados.length === 0) {
                 noPedidos.style.display = 'block';
                 return;
             } else {
                 noPedidos.style.display = 'none';
             }
 
-            pedidosData.forEach(p => {
+            pedidosFiltrados.forEach(p => {
                 const div = document.createElement('div');
                 let statusClass = '';
                 if (p.status === 'Pedido Realizado') statusClass = 'realizado';
@@ -196,7 +223,7 @@
                 const time = new Date(p.data_hora).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
                 div.innerHTML = `
                     <div class="pedido-header" onclick="toggleDetails(this)">
-                        <span>#${p.pedido_numero} - ${time}</span>
+                        <span>#${p.pedido_numero} - Mesa ${p.mesa} - ${p.nome} - ${time}</span>
                     </div>
                     <div class="pedido-details">
                         <p><strong>Nome:</strong> ${p.nome} (Mesa ${p.mesa})</p>
@@ -206,7 +233,17 @@
                         <ul>
                             ${Array.isArray(p.produto) ? p.produto.map(item => `<li>${item}</li>`).join('') : '<li>Produtos não disponíveis</li>'}
                         </ul>
-                        <p><strong>Observações:</strong> ${p.descricao || '-'}</p>
+                        <p><strong>Observações:</strong></p>
+                        <ul>
+                            <li>${p.descricao || '-'}</li>
+                            ${p.obs2 ? `<li>${p.obs2}</li>` : ''}
+                            ${p.obs3 ? `<li>${p.obs3}</li>` : ''}
+                            ${p.obs4 ? `<li>${p.obs4}</li>` : ''}
+                        </ul>
+                        <div class="obs-section">
+                            <input type="text" class="obs-input" placeholder="Nova observação" id="nova-obs-${p.pedido_numero}">
+                            <button class="obs-btn" onclick="adicionarObservacao(${p.pedido_numero})">Inserir Observação</button>
+                        </div>
                         <p><strong>Status:</strong> ${p.status}</p>
                         <div class="status-btns">
                             <button onclick="changeStatus(${p.pedido_numero}, 'Em Preparo')">Em Preparo</button>
@@ -252,6 +289,27 @@
                 }
             } else {
                 alert('Senha incorreta!');
+            }
+        }
+
+        async function adicionarObservacao(pedidoId) {
+            const novaObs = document.getElementById(`nova-obs-${pedidoId}`).value.trim();
+            if (!novaObs) {
+                alert('Digite uma observação válida!');
+                return;
+            }
+
+            const response = await fetch(`/add_observacao/${pedidoId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ observacao: novaObs })
+            });
+
+            if (response.ok) {
+                document.getElementById(`nova-obs-${pedidoId}`).value = ''; // Limpa o input
+                carregarPedidos(); // Recarrega os pedidos para refletir a mudança
+            } else {
+                alert('Erro ao adicionar observação');
             }
         }
 
