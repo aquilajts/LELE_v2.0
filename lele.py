@@ -235,22 +235,18 @@ def caixa_recebimento():
         if p.get('status') != 'Pago':
             id_c = p['id_cliente']
             if id_c not in grupos:
-                grupos[id_c] = {'pedidos': [], 'total': 0, 'desconto': 0, 'dividir1': None, 'dividir2': None}
+                grupos[id_c] = {'pedidos': [], 'total': 0, 'desconto': 0, 'dividir1': 0, 'dividir2': 0}
             
             grupos[id_c]['pedidos'].append(p)
             grupos[id_c]['total'] += p.get('total', 0)
             
             # Buscar informações de desconto e divisão por id_cliente
             if not grupos[id_c]['desconto']:
-                desconto_response = supabase.table('pedidos_finalizados').select('desconto').eq('id_cliente', id_c).execute()
+                desconto_response = supabase.table('pedidos_finalizados').select('desconto, dividir1, dividir2').eq('id_cliente', id_c).execute()
                 if desconto_response.data:
-                    grupos[id_c]['desconto'] = desconto_response.data[0].get('desconto', 0)
-            
-            if not grupos[id_c]['dividir1']:
-                dividir_response = supabase.table('pedidos_finalizados').select('dividir1, dividir2').eq('id_cliente', id_c).execute()
-                if dividir_response.data:
-                    grupos[id_c]['dividir1'] = dividir_response.data[0].get('dividir1')
-                    grupos[id_c]['dividir2'] = dividir_response.data[0].get('dividir2')
+                    grupos[id_c]['desconto'] = desconto_response.data[0].get('desconto', 0) or 0
+                    grupos[id_c]['dividir1'] = desconto_response.data[0].get('dividir1', 0) or 0
+                    grupos[id_c]['dividir2'] = desconto_response.data[0].get('dividir2', 0) or 0
     
     return render_template('recebimento.html', grupos=grupos.items())
 
