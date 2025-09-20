@@ -200,85 +200,47 @@
                                 </ul>
                             </div>
                             <p>Valor: R$ {{ pedido.total | round(2) }}</p>
-                            {% if pedido.descricao %}
-                                <p>Descrição: {{ pedido.descricao }}</p>
+                            {% if pedido.descricao or pedido.obs2 or pedido.obs3 or pedido.obs4 %}
+                                <p><strong>Observações:</strong></p>
+                                <ul>
+                                    {% if pedido.descricao %}<li>{{ pedido.descricao }}</li>{% endif %}
+                                    {% if pedido.obs2 %}<li>{{ pedido.obs2 }}</li>{% endif %}
+                                    {% if pedido.obs3 %}<li>{{ pedido.obs3 }}</li>{% endif %}
+                                    {% if pedido.obs4 %}<li>{{ pedido.obs4 }}</li>{% endif %}
+                                </ul>
                             {% endif %}
+                            <div style="margin-top: 10px; padding: 10px; background-color: #f0f0f0; border-radius: 5px;">
+                                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+                                    <input type="number" id="desconto-{{ pedido.pedido_numero }}" placeholder="Desconto" style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 100px;">
+                                    <button class="pagar-btn" style="padding: 5px 10px;" onclick="aplicarDesconto({{ pedido.pedido_numero }})">Desconto</button>
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="number" id="parcial-{{ pedido.pedido_numero }}" placeholder="Pago Parcial" style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 100px;">
+                                    <button class="pagar-btn" style="padding: 5px 10px;" onclick="pagarParcial({{ pedido.pedido_numero }})">Pago Parcial</button>
+                                </div>
+                                {% if pedido.desconto %}
+                                    <p style="margin-top: 5px; font-weight: bold; color: #8B0000;">
+                                        Desconto: R$ {{ pedido.desconto | round(2) }}
+                                    </p>
+                                {% endif %}
+                                {% if pedido.dividir1 %}
+                                    <p style="margin-top: 5px; font-weight: bold; color: #10B981;">
+                                        Primeiro pagamento: R$ {{ pedido.dividir1 | round(2) }}
+                                    </p>
+                                {% endif %}
+                                {% if pedido.dividir2 %}
+                                    <p style="margin-top: 5px; font-weight: bold; color: #10B981;">
+                                        Segundo pagamento: R$ {{ pedido.dividir2 | round(2) }}
+                                    </p>
+                                {% endif %}
+                            </div>
                             <button class="pagar-btn" style="background-color: #DC2626; margin-top: 10px;" onclick="excluirPedido({{ pedido.pedido_numero }})">Excluir Pedido</button>
                         </div>
                         {% endif %}
                     {% endfor %}
-                    
-                    {% for id_cliente, grupo in grupos %}
-                        {% if grupo.pedidos|selectattr('status', '!=', 'Pago')|list %}
-                        <div class="comanda-card">
-                            {% set nome_cliente = grupo.pedidos[0].nome %}
-                            {% set pedido_antigo = grupo.pedidos|sort(attribute='data_hora')|first %}
-                            {% set total_com_desconto = grupo.total - (grupo.desconto or 0) - (grupo.dividir1 or 0) - (grupo.dividir2 or 0) %}
-                            <div class="comanda-header">
-                                <h3>{{ nome_cliente }} - Total: R$ {{ total_com_desconto | round(2) }}</h3>
-                                <small style="color: #8B0000;">- {{ pedido_antigo.data_hora[:10]|replace('-', '/') }} {{ pedido_antigo.data_hora[11:16] }}</small>
-                            </div>
-                            <div class="comanda-content">
-                                {% for pedido in grupo.pedidos %}
-                                    {% if pedido.status != 'Pago' %}
-                                    <div class="pedido-detalhes">
-                                        <p><strong>Pedido #{{ pedido.pedido_numero }}</strong></p>
-                                        <p>Horário: {{ pedido.data_hora[:10]|replace('-', '/') }} - {{ pedido.data_hora[11:16] }}</p>
-                                        <p>Status: <span class="status {{ pedido.status | replace(' ', '') | lower }}">{{ pedido.status }}</span></p>
-                                        <div class="produto-list">
-                                            <p>Produtos:</p>
-                                            <ul>
-                                                {% for produto in pedido.produto %}
-                                                    <li>{{ produto }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
-                                        <p>Valor: R$ {{ pedido.total | round(2) }}</p>
-                                        {% if pedido.descricao or pedido.obs2 or pedido.obs3 or pedido.obs4 %}
-                                            <p><strong>Observações:</strong></p>
-                                            <ul>
-                                                {% if pedido.descricao %}<li>{{ pedido.descricao }}</li>{% endif %}
-                                                {% if pedido.obs2 %}<li>{{ pedido.obs2 }}</li>{% endif %}
-                                                {% if pedido.obs3 %}<li>{{ pedido.obs3 }}</li>{% endif %}
-                                                {% if pedido.obs4 %}<li>{{ pedido.obs4 }}</li>{% endif %}
-                                            </ul>
-                                        {% endif %}
-                                        <div style="margin-top: 10px; padding: 10px; background-color: #f0f0f0; border-radius: 5px;">
-                                            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
-                                                <input type="number" id="desconto-{{ pedido.pedido_numero }}" placeholder="Desconto" style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 100px;">
-                                                <button class="pagar-btn" style="padding: 5px 10px;" onclick="aplicarDesconto({{ pedido.pedido_numero }})">Desconto</button>
-                                            </div>
-                                            <div style="display: flex; gap: 10px; align-items: center;">
-                                                <input type="number" id="parcial-{{ pedido.pedido_numero }}" placeholder="Pago Parcial" style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 100px;">
-                                                <button class="pagar-btn" style="padding: 5px 10px;" onclick="pagarParcial({{ pedido.pedido_numero }})">Pago Parcial</button>
-                                            </div>
-                                            {% if pedido.desconto %}
-                                                <p style="margin-top: 5px; font-weight: bold; color: #8B0000;">
-                                                    Desconto: R$ {{ pedido.desconto | round(2) }}
-                                                </p>
-                                            {% endif %}
-                                            {% if pedido.dividir1 %}
-                                                <p style="margin-top: 5px; font-weight: bold; color: #10B981;">
-                                                    Dividir 1: R$ {{ pedido.dividir1 | round(2) }}
-                                                </p>
-                                            {% endif %}
-                                            {% if pedido.dividir2 %}
-                                                <p style="margin-top: 5px; font-weight: bold; color: #10B981;">
-                                                    Dividir 2: R$ {{ pedido.dividir2 | round(2) }}
-                                                </p>
-                                            {% endif %}
-                                        </div>
-                                        <button class="pagar-btn" style="background-color: #DC2626; margin-top: 10px;" onclick="excluirPedido({{ pedido.pedido_numero }})">Excluir Pedido</button>
-                                    </div>
-                                    {% endif %}
-                                {% endfor %}
-                                <div style="margin-top: 15px;">
-                                    <button class="pagar-btn" onclick="pagarComanda('{{ id_cliente }}')">Pedido Pago Completo</button>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
+                    <div style="margin-top: 15px;">
+                        <button class="pagar-btn" onclick="pagarComanda('{{ id_cliente }}')">Pedido Pago Completo</button>
+                    </div>
                 </div>
             </div>
             {% endif %}
