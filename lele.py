@@ -310,41 +310,58 @@ def pagar_parcial():
 
 @app.route('/caixa/funcionario/pagar_comanda', methods=['POST'])
 def pagar_comanda():
+    if not session.get('autenticado_funcionario'):
+        return jsonify({"error": "Funcionário não autenticado"}), 401
+
     data = request.json
     id_cliente = data.get('id_cliente')
     
     try:
+        # Verifica se id_cliente foi fornecido
+        if not id_cliente:
+            return jsonify({"error": "ID do cliente é obrigatório"}), 400
+
         # Atualiza o status para 'Pago' na tabela pedidos_finalizados
         update_response = supabase.table('pedidos_finalizados').update({'status': 'Pago'}).eq('id_cliente', id_cliente).execute()
-        
+        if not update_response.data:
+            return jsonify({"error": "Nenhum pedido encontrado para atualizar"}), 404
+
         # Busca os pedidos pagos para extrair os produtos
         pedidos_response = supabase.table('pedidos_finalizados').select('produto', 'data_hora').eq('id_cliente', id_cliente).eq('status', 'Pago').execute()
         pedidos = pedidos_response.data or []
-        
+
         # Processa cada pedido e insere na tabela vendas
         for pedido in pedidos:
             produtos = pedido.get('produto', [])
             if isinstance(produtos, str):  # Garante que é uma string JSONB
                 import json
-                produtos = json.loads(produtos.replace("'", '"'))  # Converte string JSONB para lista
+                try:
+                    produtos = json.loads(produtos.replace("'", '"'))  # Converte string JSONB para lista
+                except json.JSONDecodeError as e:
+                    logging.error(f"Erro ao decodificar JSON para pedido {pedido.get('pedido_numero')}: {str(e)}")
+                    continue
             data_hora = pedido.get('data_hora')
-            
+
             for item in produtos:
-                # Extrai nome, categoria e preço (assumindo formato "produto - R$ preco")
                 if isinstance(item, str):
                     parts = item.split(' - R$ ')
                     if len(parts) == 2:
                         nome = parts[0]
-                        preco = float(parts[1].replace(',', '.'))  # Converte preço para float
-                        # Para simplificar, assume que categoria vem de uma lógica futura ou é nula inicialmente
-                        categoria = None  # Pode ser ajustado com uma lógica para mapear categorias
-                        supabase.table('vendas').insert({
-                            'nome': nome,
-                            'categoria': categoria,
-                            'preco': preco,
-                            'data_hora': data_hora
-                        }).execute()
-        
+                        try:
+                            preco = float(parts[1].replace(',', '.'))
+                            categoria = None  # Pode ser ajustado com uma lógica para mapear categorias
+                            insert_response = supabase.table('vendas').insert({
+                                'nome': nome,
+                                'categoria': categoria,
+                                'preco': preco,
+                                'data_hora': data_hora
+                            }).execute()
+                            if not insert_response.data:
+                                logging.warning(f"Falha ao inserir item {nome} na tabela vendas")
+                        except ValueError as e:
+                            logging.error(f"Erro ao converter preço para float: {str(e)} para item {item}")
+                            continue
+
         return jsonify({"message": "Comanda paga com sucesso"}), 200
     except Exception as e:
         logging.error(f"Erro ao pagar comanda: {str(e)}")
