@@ -101,8 +101,8 @@
             }
         }
         
-        async function aplicarDesconto(id_cliente) {
-            const desconto = document.getElementById(`desconto-${id_cliente}`).value.trim();
+        async function aplicarDesconto(pedido_numero) {
+            const desconto = document.getElementById(`desconto-${pedido_numero}`).value.trim();
             if (!desconto || isNaN(desconto)) {
                 alert('Digite um valor de desconto válido!');
                 return;
@@ -111,12 +111,12 @@
             const response = await fetch('/caixa/funcionario/aplicar_desconto', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_cliente, desconto: parseFloat(desconto) })
+                body: JSON.stringify({ pedido_numero, desconto: parseFloat(desconto) })
             });
             
             if (response.ok) {
                 alert('Desconto aplicado!');
-                document.getElementById(`desconto-${id_cliente}`).value = '';
+                document.getElementById(`desconto-${pedido_numero}`).value = '';
                 location.reload();
             } else {
                 const data = await response.json();
@@ -124,8 +124,8 @@
             }
         }
         
-        async function pagarParcial(id_cliente) {
-            const valorParcial = document.getElementById(`parcial-${id_cliente}`).value.trim();
+        async function pagarParcial(pedido_numero) {
+            const valorParcial = document.getElementById(`parcial-${pedido_numero}`).value.trim();
             if (!valorParcial || isNaN(valorParcial)) {
                 alert('Digite um valor de pagamento parcial válido!');
                 return;
@@ -134,12 +134,12 @@
             const response = await fetch('/caixa/funcionario/pagar_parcial', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_cliente, valor: parseFloat(valorParcial) })
+                body: JSON.stringify({ pedido_numero, valor: parseFloat(valorParcial) })
             });
             
             if (response.ok) {
                 alert('Pagamento parcial registrado!');
-                document.getElementById(`parcial-${id_cliente}`).value = '';
+                document.getElementById(`parcial-${pedido_numero}`).value = '';
                 location.reload();
             } else {
                 const data = await response.json();
