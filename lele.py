@@ -225,17 +225,100 @@ def caixa_funcionario():
 def caixa_recebimento():
     if not session.get('autenticado_funcionario'):
         return redirect(url_for('caixa_funcionario'))
+    
     response = supabase.table('pedidos_finalizados').select('*').order('data_hora', desc=True).execute()
     pedidos = response.data or []
-    # Agrupar por id_cliente
+    
+    # Agrupar por id_cliente, filtrando apenas pedidos não pagos
     grupos = {}
     for p in pedidos:
-        id_c = p['id_cliente']
-        if id_c not in grupos:
-            grupos[id_c] = {'pedidos': [], 'total': 0}
-        grupos[id_c]['pedidos'].append(p)
-        grupos[id_c]['total'] += p.get('total', 0)  # Usa 0 se total não existir
+        if p.get('status') != 'Pago':
+            id_c = p['id_cliente']
+            if id_c not in grupos:
+                grupos[id_c] = {'pedidos': [], 'total': 0, 'desconto': 0, 'dividir1': None, 'dividir2': None}
+            
+            grupos[id_c]['pedidos'].append(p)
+            grupos[id_c]['total'] += p.get('total', 0)
+            
+            # Buscar informações de desconto e divisão por id_cliente
+            if not grupos[id_c]['desconto']:
+                desconto_response = supabase.table('pedidos_finalizados').select('desconto').eq('id_cliente', id_c).execute()
+                if desconto_response.data:
+                    grupos[id_c]['desconto'] = desconto_response.data[0].get('desconto', 0)
+            
+            if not grupos[id_c]['dividir1']:
+                dividir_response = supabase.table('pedidos_finalizados').select('dividir1, dividir2').eq('id_cliente', id_c).execute()
+                if dividir_response.data:
+                    grupos[id_c]['dividir1'] = dividir_response.data[0].get('dividir1')
+                    grupos[id_c]['dividir2'] = dividir_response.data[0].get('dividir2')
+    
     return render_template('recebimento.html', grupos=grupos.items())
+
+@app.route('/caixa/funcionario/aplicar_desconto', methods=['POST'])
+def aplicar_desconto():
+    try:
+        if not session.get('autenticado_funcionario'):
+            return jsonify({"error": "Funcionário não autenticado"}), 401
+        
+        data = request.get_json()
+        id_cliente = data.get('id_cliente')
+        desconto = data.get('desconto')
+        
+        if not id_cliente or not desconto or desconto <= 0:
+            return jsonify({"error": "ID do cliente e desconto válido são obrigatórios"}), 400
+        
+        # Atualiza todos os pedidos do cliente com o desconto
+        response = supabase.table('pedidos_finalizados').update({
+            'desconto': desconto
+        }).eq('id_cliente', id_cliente).execute()
+        
+        if response.data:
+            logging.info(f"Desconto de R$ {desconto} aplicado para cliente {id_cliente}")
+            return jsonify({"message": "Desconto aplicado com sucesso"}), 200
+        else:
+            return jsonify({"error": "Nenhum pedido encontrado para este cliente"}), 404
+            
+    except Exception as e:
+        logging.error(f"Erro ao aplicar desconto: {str(e)}")
+        return jsonify({"error": "Erro interno do servidor"}), 500
+
+@app.route('/caixa/funcionario/pagar_parcial', methods=['POST'])
+def pagar_parcial():
+    try:
+        if not session.get('autenticado_funcionario'):
+            return jsonify({"error": "Funcionário não autenticado"}), 401
+        
+        data = request.get_json()
+        id_cliente = data.get('id_cliente')
+        valor = data.get('valor')
+        
+        if not id_cliente or not valor or valor <= 0:
+            return jsonify({"error": "ID do cliente e valor válido são obrigatórios"}), 400
+        
+        # Busca o pedido atual para verificar colunas dividir
+        response = supabase.table('pedidos_finalizados').select('dividir1, dividir2').eq('id_cliente', id_cliente).execute()
+        if not response.data:
+            return jsonify({"error": "Nenhum pedido encontrado para este cliente"}), 404
+        
+        pedido = response.data[0]
+        update_data = {}
+        
+        if not pedido.get('dividir1'):
+            update_data['dividir1'] = valor
+        elif not pedido.get('dividir2'):
+            update_data['dividir2'] = valor
+        else:
+            return jsonify({"error": "Limite de pagamentos parciais atingido (2)"}), 400
+        
+        # Atualiza o pedido
+        supabase.table('pedidos_finalizados').update(update_data).eq('id_cliente', id_cliente).execute()
+        
+        logging.info(f"Pagamento parcial de R$ {valor} registrado para cliente {id_cliente}")
+        return jsonify({"message": "Pagamento parcial registrado com sucesso"}), 200
+        
+    except Exception as e:
+        logging.error(f"Erro ao registrar pagamento parcial: {str(e)}")
+        return jsonify({"error": "Erro interno do servidor"}), 500
 
 @app.route('/caixa/funcionario/pagar_comanda', methods=['POST'])
 def pagar_comanda():
