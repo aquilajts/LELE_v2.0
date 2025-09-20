@@ -312,7 +312,38 @@ def pagar_parcial():
 def pagar_comanda():
     data = request.json
     id_cliente = data.get('id_cliente')
-    supabase.table('pedidos_finalizados').update({'status': 'Pago'}).eq('id_cliente', id_cliente).execute()
+    
+    # Atualiza o status para 'Pago' na tabela pedidos_finalizados
+    update_response = supabase.table('pedidos_finalizados').update({'status': 'Pago'}).eq('id_cliente', id_cliente).execute()
+    
+    # Busca os pedidos pagos para extrair os produtos
+    pedidos_response = supabase.table('pedidos_finalizados').select('produto', 'data_hora').eq('id_cliente', id_cliente).eq('status', 'Pago').execute()
+    pedidos = pedidos_response.data or []
+    
+    # Processa cada pedido e insere na tabela vendas
+    for pedido in pedidos:
+        produtos = pedido.get('produto', [])
+        if isinstance(produtos, str):  # Garante que é uma string JSONB
+            import json
+            produtos = json.loads(produtos.replace("'", '"'))  # Converte string JSONB para lista
+        data_hora = pedido.get('data_hora')
+        
+        for item in produtos:
+            # Extrai nome, categoria e preço (assumindo formato "produto - R$ preco")
+            if isinstance(item, str):
+                parts = item.split(' - R$ ')
+                if len(parts) == 2:
+                    nome = parts[0]
+                    preco = float(parts[1].replace(',', '.'))  # Converte preço para float
+                    # Para simplificar, assume que categoria vem de uma lógica futura ou é nula inicialmente
+                    categoria = None  # Pode ser ajustado com uma lógica para mapear categorias
+                    supabase.table('vendas').insert({
+                        'nome': nome,
+                        'categoria': categoria,
+                        'preco': preco,
+                        'data_hora': data_hora
+                    }).execute()
+    
     return jsonify({"message": "Comanda paga com sucesso"}), 200
 
 @app.route('/caixa/funcionario/estoque', methods=['GET'])
