@@ -100,6 +100,68 @@
                 alert(data.error || 'Erro ao pagar comanda');
             }
         }
+        
+        async function aplicarDesconto(id_cliente) {
+            const desconto = document.getElementById(`desconto-${id_cliente}`).value.trim();
+            if (!desconto || isNaN(desconto)) {
+                alert('Digite um valor de desconto válido!');
+                return;
+            }
+            
+            const response = await fetch('/caixa/funcionario/aplicar_desconto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_cliente, desconto: parseFloat(desconto) })
+            });
+            
+            if (response.ok) {
+                alert('Desconto aplicado!');
+                document.getElementById(`desconto-${id_cliente}`).value = '';
+                location.reload();
+            } else {
+                const data = await response.json();
+                alert(data.error || 'Erro ao aplicar desconto');
+            }
+        }
+        
+        async function pagarParcial(id_cliente) {
+            const valorParcial = document.getElementById(`parcial-${id_cliente}`).value.trim();
+            if (!valorParcial || isNaN(valorParcial)) {
+                alert('Digite um valor de pagamento parcial válido!');
+                return;
+            }
+            
+            const response = await fetch('/caixa/funcionario/pagar_parcial', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_cliente, valor: parseFloat(valorParcial) })
+            });
+            
+            if (response.ok) {
+                alert('Pagamento parcial registrado!');
+                document.getElementById(`parcial-${id_cliente}`).value = '';
+                location.reload();
+            } else {
+                const data = await response.json();
+                alert(data.error || 'Erro ao registrar pagamento parcial');
+            }
+        }
+        
+        async function excluirPedido(pedido_numero) {
+            const senha = prompt('Digite a senha para excluir:');
+            if (senha === 'gabilelececi') {
+                const response = await fetch(`/delete_pedido/${pedido_numero}`, { method: 'DELETE' });
+                if (response.ok) {
+                    alert('Pedido excluído!');
+                    location.reload();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Erro ao excluir pedido');
+                }
+            } else {
+                alert('Senha incorreta!');
+            }
+        }
     </script>
 </head>
 <body>
@@ -113,12 +175,18 @@
     </div>
     <div class="content">
         {% for id_cliente, grupo in grupos %}
+            {% if grupo.pedidos|selectattr('status', '!=', 'Pago')|list %}
             <div class="comanda-card">
+                {% set nome_cliente = grupo.pedidos[0].nome %}
+                {% set pedido_antigo = grupo.pedidos|sort(attribute='data_hora')|first %}
+                {% set total_com_desconto = grupo.total - (grupo.desconto or 0) %}
                 <div class="comanda-header">
-                    <h3>Comanda {{ id_cliente }} - Total: R$ {{ grupo.total | round(2) }}</h3>
+                    <h3>{{ nome_cliente }} - Total: R$ {{ total_com_desconto | round(2) }}</h3>
+                    <small style="color: #8B0000;">- {{ pedido_antigo.data_hora[:10]|replace('-', '/') }} {{ pedido_antigo.data_hora[11:16] }}</small>
                 </div>
                 <div class="comanda-content">
                     {% for pedido in grupo.pedidos %}
+                        {% if pedido.status != 'Pago' %}
                         <div class="pedido-detalhes">
                             <p><strong>Pedido #{{ pedido.pedido_numero }}</strong></p>
                             <p>Horário: {{ pedido.data_hora[:10]|replace('-', '/') }} - {{ pedido.data_hora[11:16] }}</p>
@@ -135,11 +203,45 @@
                             {% if pedido.descricao %}
                                 <p>Descrição: {{ pedido.descricao }}</p>
                             {% endif %}
+                            <button class="pagar-btn" style="background-color: #DC2626; margin-top: 10px;" onclick="excluirPedido({{ pedido.pedido_numero }})">Excluir Pedido</button>
                         </div>
+                        {% endif %}
                     {% endfor %}
-                    <button class="pagar-btn" onclick="pagarComanda('{{ id_cliente }}')">Pedido Pago</button>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background-color: #f0f0f0; border-radius: 5px;">
+                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                            <input type="number" id="desconto-{{ id_cliente }}" placeholder="Valor do desconto" style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
+                            <button class="pagar-btn" onclick="aplicarDesconto('{{ id_cliente }}')">Aplicar Desconto</button>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="number" id="parcial-{{ id_cliente }}" placeholder="Valor pagamento parcial" style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
+                            <button class="pagar-btn" onclick="pagarParcial('{{ id_cliente }}')">Pago Parcial</button>
+                            <button class="pagar-btn" onclick="pagarComanda('{{ id_cliente }}')">Pedido Pago Completo</button>
+                        </div>
+                        
+                        {% if grupo.desconto %}
+                            <p style="margin-top: 10px; font-weight: bold; color: #8B0000;">
+                                Desconto aplicado: R$ {{ grupo.desconto | round(2) }}
+                            </p>
+                        {% endif %}
+                        
+                        {% if grupo.dividir1 %}
+                            <p style="margin-top: 5px; font-weight: bold; color: #10B981;">
+                                Dividir 1: R$ {{ grupo.dividir1 | round(2) }}
+                            </p>
+                        {% endif %}
+                        
+                        {% if grupo.dividir2 %}
+                            <p style="margin-top: 5px; font-weight: bold; color: #10B981;">
+                                Dividir 2: R$ {{ grupo.dividir2 | round(2) }}
+                            </p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
+            {% endif %}
+        {% endfor %}
         {% endfor %}
     </div>
     <div class="footer">
