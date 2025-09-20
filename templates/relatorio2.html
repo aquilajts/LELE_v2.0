@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Vendas - Churrasquinho do Lêle</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: url('/static/wallpaperhorizontal.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px;
+            text-align: center;
+            flex: 1;
+            min-width: 180px;
+        }
+        .stat-card h3 { margin: 0; font-size: 1.2em; }
+        .stat-card p { font-size: 1.6em; font-weight: bold; margin-top: 10px; }
+        form.filtros {
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        form.filtros input, form.filtros select, form.filtros button {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #555;
+        }
+        form.filtros button {
+            background: #8B0000;
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        form.filtros button:hover { background: #A52A2A; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.6);
+        }
+        th, td {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: center;
+        }
+        th { background: #8B0000; }
+        tr:nth-child(even) { background: rgba(255, 255, 255, 0.05); }
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            background: #8B0000;
+            color: #FFF;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-btn:hover { background: #A52A2A; }
+    </style>
+</head>
+<body>
+    <div class="header">Relatório de Vendas - Churrasquinho do Lêle</div>
+
+    <!-- 🔎 Filtros -->
+    <form method="GET" class="filtros">
+        <input type="text" name="nome" value="{{ nome_filtro }}" placeholder="Buscar produto...">
+        <label>De:</label>
+        <input type="date" name="data_inicio" value="{{ data_inicio }}">
+        <label>Até:</label>
+        <input type="date" name="data_fim" value="{{ data_fim }}">
+        <button type="submit">🔍 Buscar</button>
+    </form>
+
+    <!-- 📊 Cards de estatísticas -->
+    <div class="stats">
+        <div class="stat-card">
+            <h3>Total Vendido</h3>
+            <p>R$ {{ total_vendido }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Itens Vendidos</h3>
+            <p>{{ total_itens }}</p>
+        </div>
+    </div>
+
+    <!-- 📋 Tabela -->
+    <table>
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th>Preço</th>
+                <th>Data/Hora</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for venda in vendas %}
+            <tr>
+                <td>{{ venda.nome }}</td>
+                <td>{{ venda.categoria or 'Não especificada' }}</td>
+                <td>R$ {{ venda.preco | round(2) }}</td>
+                <td>{{ venda.data_hora }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="/caixa/funcionario" class="back-btn">⬅ Voltar</a>
+</body>
+</html>
