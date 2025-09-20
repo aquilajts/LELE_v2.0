@@ -477,6 +477,62 @@ def caixa_relatoriofinanceiro():
         logging.error(f"Erro ao carregar relatório: {str(e)}")
         return render_template('relatoriofinanceiro.html', pedidos=[], total_vendido=0, total_pedidos=0, pedidos_pagos=0, pedidos_abertos=0)
 
+@app.route('/relatorio/vendas', methods=['GET'])
+def relatorio_vendas():
+    if not session.get('autenticado_funcionario'):
+        return redirect(url_for('caixa_funcionario'))
+
+    try:
+        # --- Filtros vindos da URL ---
+        nome = request.args.get('nome', '').strip()
+        data_inicio = request.args.get('data_inicio', '')
+        data_fim = request.args.get('data_fim', '')
+
+        # Construção da query para a tabela vendas
+        query = supabase.table('vendas').select('*')
+
+        # Filtro por nome do produto
+        if nome:
+            query = query.ilike('nome', f"%{nome}%")
+
+        # Filtro por intervalo de datas
+        if data_inicio and data_fim:
+            query = query.gte('data_hora', f"{data_inicio} 00:00:00").lte('data_hora', f"{data_fim} 23:59:59")
+        elif data_inicio:
+            query = query.gte('data_hora', f"{data_inicio} 00:00:00")
+        elif data_fim:
+            query = query.lte('data_hora', f"{data_fim} 23:59:59")
+
+        # Executa a query com ordenação por data_hora descendente
+        response = query.order('data_hora', desc=True).execute()
+        vendas = response.data or []
+
+        # Ajusta fuso horário para São Paulo
+        tz = pytz.timezone("America/Sao_Paulo")
+        for v in vendas:
+            if v.get("data_hora"):
+                try:
+                    dt = datetime.fromisoformat(v["data_hora"].replace("Z", "+00:00"))
+                    v["data_hora"] = dt.astimezone(tz).strftime("%d/%m/%Y %H:%M:%S")
+                except:
+                    pass
+
+        # Métricas ajustadas
+        total_vendido = sum(v.get('preco', 0) for v in vendas)
+        total_itens = len(vendas)
+
+        return render_template(
+            'relatoriodevendas.html',
+            vendas=vendas,
+            nome_filtro=nome,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+            total_vendido=total_vendido,
+            total_itens=total_itens
+        )
+    except Exception as e:
+        logging.error(f"Erro ao carregar relatório de vendas: {str(e)}")
+        return render_template('relatoriodevendas.html', vendas=[], total_vendido=0, total_itens=0, nome_filtro='', data_inicio='', data_fim='')
 
 @app.route('/pedidos/meuspedidos', methods=['GET'])
 def meus_pedidos():
