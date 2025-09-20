@@ -434,6 +434,40 @@ def delete_pedido(pedido_numero):
         return jsonify({"message": "Pedido excluído"}), 200
     return jsonify({"error": "Falha ao excluir", "detalhe": str(response.error)}), 500
 
+# Nova rota para adicionar observação
+@app.route('/add_observacao/<int:pedido_numero>', methods=['POST'])
+def add_observacao(pedido_numero):
+    try:
+        data = request.get_json()
+        nova_obs = data.get('observacao')
+        if not nova_obs:
+            return jsonify({"error": "Observação é obrigatória"}), 400
+
+        # Busca o pedido atual para verificar as colunas obs
+        response = supabase.table('pedidos_finalizados').select('obs2, obs3, obs4').eq('pedido_numero', pedido_numero).execute()
+        if not response.data:
+            return jsonify({"error": "Pedido não encontrado"}), 404
+
+        pedido = response.data[0]
+        update_data = {}
+
+        if not pedido.get('obs2'):
+            update_data['obs2'] = nova_obs
+        elif not pedido.get('obs3'):
+            update_data['obs3'] = nova_obs
+        elif not pedido.get('obs4'):
+            update_data['obs4'] = nova_obs
+        else:
+            return jsonify({"error": "Limite de observações adicionais atingido"}), 400
+
+        # Atualiza o pedido
+        supabase.table('pedidos_finalizados').update(update_data).eq('pedido_numero', pedido_numero).execute()
+        return jsonify({"message": "Observação adicionada com sucesso"}), 200
+
+    except Exception as e:
+        logging.error(f"Erro ao adicionar observação: {str(e)}")
+        return jsonify({"error": "Erro interno no servidor"}), 500
+
 # Rota /pedidos/lele_data (pra simulação, substitua por /pedidos/lele depois)
 @app.route('/pedidos/lele_data', methods=['GET'])
 def pedidos_lele_data():
