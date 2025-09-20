@@ -228,13 +228,13 @@
                         
                         {% if grupo.dividir1 %}
                             <p style="margin-top: 5px; font-weight: bold; color: #10B981;">
-                                Dividir 1: R$ {{ grupo.dividir1 | round(2) }}
+                                Primeiro pagamento: R$ {{ grupo.dividir1 | round(2) }}
                             </p>
                         {% endif %}
                         
                         {% if grupo.dividir2 %}
                             <p style="margin-top: 5px; font-weight: bold; color: #10B981;">
-                                Dividir 2: R$ {{ grupo.dividir2 | round(2) }}
+                                Segundo pagamento: R$ {{ grupo.dividir2 | round(2) }}
                             </p>
                         {% endif %}
                     </div>
