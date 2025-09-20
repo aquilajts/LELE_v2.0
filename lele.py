@@ -331,36 +331,40 @@ def pagar_comanda():
         pedidos = pedidos_response.data or []
 
         # Processa cada pedido e insere na tabela vendas
-        for pedido in pedidos:
-            produtos = pedido.get('produto', [])
-            if isinstance(produtos, str):  # Garante que é uma string JSONB
-                import json
-                try:
-                    produtos = json.loads(produtos.replace("'", '"'))  # Converte string JSONB para lista
-                except json.JSONDecodeError as e:
-                    logging.error(f"Erro ao decodificar JSON para pedido {pedido.get('pedido_numero')}: {str(e)}")
-                    continue
-            data_hora = pedido.get('data_hora')
-
-            for item in produtos:
-                if isinstance(item, str):
-                    parts = item.split(' - R$ ')
-                    if len(parts) == 2:
-                        nome = parts[0]
-                        try:
-                            preco = float(parts[1].replace(',', '.'))
-                            categoria = None  # Pode ser ajustado com uma lógica para mapear categorias
-                            insert_response = supabase.table('vendas').insert({
-                                'nome': nome,
-                                'categoria': categoria,
-                                'preco': preco,
-                                'data_hora': data_hora
-                            }).execute()
-                            if not insert_response.data:
-                                logging.warning(f"Falha ao inserir item {nome} na tabela vendas")
-                        except ValueError as e:
-                            logging.error(f"Erro ao converter preço para float: {str(e)} para item {item}")
-                            continue
+        for item in produtos:
+            if isinstance(item, str):
+                parts = item.split(' - R$ ')
+                if len(parts) == 2:
+                    nome = parts[0]
+                    try:
+                        preco = float(parts[1].replace(',', '.'))
+                        # Busca a categoria na tabela itens com base no nome do produto
+                        categoria_response = supabase.table('itens').select('categoria').eq('nome', nome).execute()
+                        categoria = categoria_response.data[0]['categoria'] if categoria_response.data and len(categoria_response.data) > 0 else 'Não especificada'
+                        insert_response = supabase.table('vendas').insert({
+                            'nome': nome,
+                            'categoria': categoria,
+                            'preco': preco,
+                            'data_hora': data_hora
+                        }).execute()
+                        if not insert_response.data:
+                            logging.warning(f"Falha ao inserir item {nome} na tabela vendas")
+                        else:
+                            logging.info(f"Item {nome} inserido com categoria {categoria}")
+                    except ValueError as e:
+                        logging.error(f"Erro ao converter preço para float: {str(e)} para item {item}")
+                        continue
+                    except Exception as e:
+                        logging.error(f"Erro ao buscar categoria para {nome}: {str(e)}")
+                        categoria = 'Não especificada'  # Fallback em caso de erro na busca
+                        insert_response = supabase.table('vendas').insert({
+                            'nome': nome,
+                            'categoria': categoria,
+                            'preco': preco,
+                            'data_hora': data_hora
+                        }).execute()
+                        if not insert_response.data:
+                            logging.warning(f"Falha ao inserir item {nome} na tabela vendas")
 
         return jsonify({"message": "Comanda paga com sucesso"}), 200
     except Exception as e:
