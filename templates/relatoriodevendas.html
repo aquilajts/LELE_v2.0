@@ -120,7 +120,8 @@
                 <th>Produto</th>
                 <th>Categoria</th>
                 <th>Preço</th>
-                <th>Data/Hora</th>
+                <th>Quantidade</th>
+                <th>Valor Total</th>
             </tr>
         </thead>
         <tbody>
@@ -129,7 +130,8 @@
                 <td>{{ venda.nome }}</td>
                 <td>{{ venda.categoria or 'Não especificada' }}</td>
                 <td>R$ {{ venda.preco | round(2) }}</td>
-                <td>{{ venda.data_hora }}</td>
+                <td>{{ venda.quantidade }}</td>
+                <td>R$ {{ venda.valor_total | round(2) }}</td>
             </tr>
             {% endfor %}
         </tbody>
