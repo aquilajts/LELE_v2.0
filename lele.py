@@ -530,21 +530,28 @@ def caixa_relatoriodevendas():
 
         # Executa a query com ordenação por data_hora descendente
         response = query.order('data_hora', desc=True).execute()
-        vendas = response.data or []
+        vendas_raw = response.data or []
 
-        # Ajusta fuso horário para São Paulo
-        tz = pytz.timezone("America/Sao_Paulo")
-        for v in vendas:
-            if v.get("data_hora"):
-                try:
-                    dt = datetime.fromisoformat(v["data_hora"].replace("Z", "+00:00"))
-                    v["data_hora"] = dt.astimezone(tz).strftime("%d/%m/%Y %H:%M:%S")
-                except:
-                    pass
+        # Unifica itens por nome
+        vendas_unificadas = {}
+        for v in vendas_raw:
+            nome_produto = v['nome']
+            if nome_produto not in vendas_unificadas:
+                vendas_unificadas[nome_produto] = {
+                    'nome': nome_produto,
+                    'categoria': v.get('categoria', 'Não especificada'),
+                    'preco': v['preco'],
+                    'quantidade': 0,
+                    'valor_total': 0.0
+                }
+            vendas_unificadas[nome_produto]['quantidade'] += 1
+            vendas_unificadas[nome_produto]['valor_total'] += v['preco']
+
+        vendas = list(vendas_unificadas.values())
 
         # Métricas ajustadas
-        total_vendido = sum(v.get('preco', 0) for v in vendas)
-        total_itens = len(vendas)
+        total_vendido = sum(v['valor_total'] for v in vendas)
+        total_itens = sum(v['quantidade'] for v in vendas)
 
         return render_template(
             'relatoriodevendas.html',
