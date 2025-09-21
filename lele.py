@@ -523,6 +523,11 @@ def caixa_relatoriodevendas():
         nome = request.args.get('nome', '').strip()
         data_inicio = request.args.get('data_inicio', '')
         data_fim = request.args.get('data_fim', '')
+        categoria_filtro = request.args.get('categoria', '')
+
+        # Obter categorias únicas da tabela vendas
+        categorias_response = supabase.table('vendas').select('categoria', distinct=True).execute()
+        categorias = sorted([c['categoria'] for c in categorias_response.data if c['categoria']]) if categorias_response.data else []
 
         # Construção da query para a tabela vendas
         query = supabase.table('vendas').select('*')
@@ -538,6 +543,10 @@ def caixa_relatoriodevendas():
             query = query.gte('data_hora', f"{data_inicio} 00:00:00")
         elif data_fim:
             query = query.lte('data_hora', f"{data_fim} 23:59:59")
+
+        # Filtro por categoria (se não vazio)
+        if categoria_filtro:
+            query = query.eq('categoria', categoria_filtro)
 
         # Executa a query com ordenação por data_hora descendente
         response = query.order('data_hora', desc=True).execute()
@@ -570,12 +579,14 @@ def caixa_relatoriodevendas():
             nome_filtro=nome,
             data_inicio=data_inicio,
             data_fim=data_fim,
+            categoria_filtro=categoria_filtro,
+            categorias=categorias,
             total_vendido=total_vendido,
             total_itens=total_itens
         )
     except Exception as e:
         logging.error(f"Erro ao carregar relatório de vendas: {str(e)}")
-        return render_template('relatoriodevendas.html', vendas=[], total_vendido=0, total_itens=0, nome_filtro='', data_inicio='', data_fim='')
+        return render_template('relatoriodevendas.html', vendas=[], total_vendido=0, total_itens=0, nome_filtro='', data_inicio='', data_fim='', categoria_filtro='', categorias=[])
 
 @app.route('/pedidos/meuspedidos', methods=['GET'])
 def meus_pedidos():
