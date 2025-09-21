@@ -98,6 +98,13 @@
         <input type="date" name="data_inicio" value="{{ data_inicio }}">
         <label>Até:</label>
         <input type="date" name="data_fim" value="{{ data_fim }}">
+        <label>Categoria:</label>
+        <select name="categoria">
+            <option value="">Todas</option>
+            {% for cat in categorias %}
+            <option value="{{ cat }}" {% if categoria_filtro == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
         <button type="submit">🔍 Buscar</button>
     </form>
 
