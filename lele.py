@@ -526,8 +526,13 @@ def caixa_relatoriodevendas():
         categoria_filtro = request.args.get('categoria', '')
 
         # Obter categorias únicas da tabela vendas
-        categorias_response = supabase.table('vendas').select('categoria', distinct=True).execute()
-        categorias = sorted([c['categoria'] for c in categorias_response.data if c['categoria']]) if categorias_response.data else []
+        categorias_response = supabase.table('vendas').select('categoria').execute()
+        categorias_set = set()
+        if categorias_response.data:
+            for c in categorias_response.data:
+                if c.get('categoria'):  # Verifica se a categoria existe e não é nula
+                    categorias_set.add(c['categoria'])
+        categorias = sorted(list(categorias_set))  # Converte para lista ordenada
 
         # Construção da query para a tabela vendas
         query = supabase.table('vendas').select('*')
@@ -544,8 +549,8 @@ def caixa_relatoriodevendas():
         elif data_fim:
             query = query.lte('data_hora', f"{data_fim} 23:59:59")
 
-        # Filtro por categoria (se não vazio)
-        if categoria_filtro:
+        # Filtro por categoria (aplicado se não for vazio, ignorando "Todas")
+        if categoria_filtro and categoria_filtro != '':
             query = query.eq('categoria', categoria_filtro)
 
         # Executa a query com ordenação por data_hora descendente
