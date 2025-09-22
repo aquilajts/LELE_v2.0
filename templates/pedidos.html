@@ -54,15 +54,17 @@
         }
         .pedido-card {
             background: rgba(255,255,255,0.9);
-            padding: 15px;
-            margin: 10px 0;
+            padding: 12px;
+            margin: 12px 0;
             border-radius: 10px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            cursor: pointer;
+            cursor: default;
             transition: transform 0.2s;
             animation: fadeIn 0.5s;
             color: #000000;
         }
+        .pedido-card:hover { transform: scale(1.02); }
+        .pedido-header { font-weight: bold; font-size: 16px; }
         .pedido-card.realizado { border-left: 5px solid #DC2626; }
         .pedido-card.empreparo { border-left: 5px solid #F59E0B; }
         .pedido-card.preparado { border-left: 5px solid #10B981; }
@@ -131,61 +133,12 @@ async function carregarPedidos() {
         div.className = `pedido-card ${statusClass}`;
         const time = new Date(p.data_hora).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
         div.innerHTML = `
-            <div class="pedido-header" onclick="toggleDetails(this)">
-                <span>#${p.pedido_numero} - Mesa ${p.mesa} - ${p.nome} - ${time}</span>
-            </div>
-            <div class="pedido-details">
-                <p><strong>Nome:</strong> ${p.nome} (Mesa ${p.mesa})</p>
-                <p><strong>Contato:</strong> ${p.contato || '-'}</p>
-                <p><strong>Total:</strong> R$ ${(p.total || 0).toFixed(2)}</p>
-                <p><strong>Produtos:</strong></p>
-                <ul>
-                    ${Array.isArray(p.produto) ? p.produto.map(item => `<li>${item}</li>`).join('') : '<li>Produtos não disponíveis</li>'}
-                </ul>
-                <p><strong>Observações:</strong></p>
-                <ul>
-                    <li>${p.descricao || '-'}</li>
-                    ${p.obs2 ? `<li>${p.obs2}</li>` : ''}
-                    ${p.obs3 ? `<li>${p.obs3}</li>` : ''}
-                    ${p.obs4 ? `<li>${p.obs4}</li>` : ''}
-                </ul>
-                <div class="obs-section">
-                    <input type="text" class="obs-input" placeholder="Nova observação" id="nova-obs-${p.pedido_numero}">
-                    <button class="obs-btn" onclick="adicionarObservacao(${p.pedido_numero})">Inserir Observação</button>
-                </div>
-                <p><strong>Status:</strong> ${p.status}</p>
+            <div class="pedido-header">
+                Pedido Nº ${p.pedido_numero} - Mesa ${p.mesa} - ${p.status} - ${time}
             </div>
         `;
         container.appendChild(div);
     });
-}
-
-function toggleDetails(header) {
-    const details = header.nextElementSibling;
-    const allDetails = document.querySelectorAll('.pedido-details');
-    allDetails.forEach(d => { if (d !== details) d.style.display = 'none'; });
-    details.style.display = details.style.display === 'block' ? 'none' : 'block';
-}
-
-async function adicionarObservacao(pedidoId) {
-    const novaObs = document.getElementById(`nova-obs-${pedidoId}`).value.trim();
-    if (!novaObs) {
-        alert('Digite uma observação válida!');
-        return;
-    }
-
-    const response = await fetch(`/add_observacao/${pedidoId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ observacao: novaObs })
-    });
-
-    if (response.ok) {
-        document.getElementById(`nova-obs-${pedidoId}`).value = ''; // Limpa o input
-        carregarPedidos(); // Recarrega os pedidos para refletir a mudança
-    } else {
-        alert('Erro ao adicionar observação');
-    }
 }
 
 document.addEventListener('DOMContentLoaded', carregarPedidos);
