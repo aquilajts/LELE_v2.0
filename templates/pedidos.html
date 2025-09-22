@@ -124,7 +124,15 @@ async function carregarPedidos() {
 
     const pedidos = {{ pedidos | tojson }};
     
-    pedidos.forEach(p => {
+    // Filtrar pedidos para excluir os com status "Pago"
+    const pedidosFiltrados = pedidos.filter(p => p.status !== 'Pago');
+    
+    if (pedidosFiltrados.length === 0) {
+        container.innerHTML = '<p style="color: #FFFFFF;">Nenhum pedido encontrado.</p>';
+        return;
+    }
+    
+    pedidosFiltrados.forEach(p => {
         const div = document.createElement('div');
         let statusClass = '';
         if (p.status === 'Pedido Realizado') statusClass = 'realizado';
