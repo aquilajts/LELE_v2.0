@@ -30,14 +30,18 @@
         }
         .pedido-card {
             background: rgba(255,255,255,0.9);
+            border-radius: 10px;
             padding: 15px;
             margin: 10px 0;
-            border-radius: 10px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
             transition: transform 0.2s;
             animation: fadeIn 0.5s;
             color: #000000;
         }
+        .pedido-card.realizado { border-left: 5px solid #DC2626; }
+        .pedido-card.empreparo { border-left: 5px solid #F59E0B; }
+        .pedido-card.preparado { border-left: 5px solid #10B981; }
+        .pedido-card.entregue { border-left: 5px solid #8B5CF6; }
         .pedido-card:hover { transform: scale(1.02); }
         .pedido-card-header {
             display: flex;
@@ -154,29 +158,28 @@
             allCards.forEach(c => { if (c !== card) c.classList.remove('expanded'); });
             card.classList.toggle('expanded');
         }
-
+    
         async function adicionarObservacao(pedidoId) {
             const novaObs = document.getElementById(`nova-obs-${pedidoId}`).value.trim();
             if (!novaObs) {
                 alert('Digite uma observação válida!');
                 return;
             }
-
+    
             const response = await fetch(`/add_observacao/${pedidoId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ observacao: novaObs })
             });
-
+    
             if (response.ok) {
                 document.getElementById(`nova-obs-${pedidoId}`).value = ''; // Limpa o input
-                // Recarrega a página para refletir a mudança (sem reimplementar carregarPedidos)
                 location.reload();
             } else {
                 alert('Erro ao adicionar observação');
             }
         }
-
+    
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.pedido-card-header').forEach(header => {
                 header.addEventListener('click', () => toggleDetails(header));
