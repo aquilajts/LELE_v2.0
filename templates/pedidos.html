@@ -129,6 +129,8 @@ async function carregarPedidos() {
         let statusClass = '';
         if (p.status === 'Pedido Realizado') statusClass = 'realizado';
         else if (p.status === 'Em Andamento') statusClass = 'andamento';
+        else if (p.status === 'Em Preparo') statusClass = 'empreparo';
+        else if (p.status === 'Preparado') statusClass = 'preparado';
         else if (p.status === 'Entregue') statusClass = 'entregue';
         div.className = `pedido-card ${statusClass}`;
         const time = new Date(p.data_hora).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
