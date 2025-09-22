@@ -2,17 +2,14 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Churrasquinho do Lêle - Meus Pedidos</title>]
+    <title>Churrasquinho do Lêle - Meus Pedidos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
         body {
             font-family: 'Helvetica', sans-serif;
             background: url('/static/wallpaperhorizontal.png') no-repeat center center fixed;
             background-size: cover;
+            margin: 0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -33,25 +30,28 @@
         }
         .pedido-card {
             background: rgba(255,255,255,0.9);
-            border: 2px solid #8B0000;
-            border-radius: 10px;
             padding: 15px;
-            margin: 15px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            margin: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
             transition: transform 0.2s;
-            overflow: hidden;
+            animation: fadeIn 0.5s;
             color: #000000;
         }
-        .pedido-card:hover {
-            transform: scale(1.02);
-        }
+        .pedido-card:hover { transform: scale(1.02); }
         .pedido-card-header {
             display: flex;
             justify-content: space-between;
             cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
         }
-        .pedido-card-header h3 { margin: 0; font-size: 18px; }
-        .pedido-card-content { display: none; padding-top: 10px; color: #4B5563; }
+        .pedido-card-content {
+            display: none;
+            padding-top: 10px;
+            font-size: 14px;
+            color: #4B5563;
+        }
         .pedido-card.expanded .pedido-card-content { display: block; }
         .produto-scroll {
             display: flex;
@@ -61,8 +61,29 @@
             white-space: nowrap;
         }
         .produto-item { min-width: 150px; text-align: left; }
-        .details { font-size: 14px; }
         .highlight { color: #8B0000; font-weight: bold; }
+        .obs-section {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .obs-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #4B5563;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .obs-btn {
+            background-color: #8B0000;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .obs-btn:hover { transform: scale(1.05); }
         .footer {
             background-color: #000000;
             text-align: center;
@@ -75,26 +96,17 @@
             text-decoration: none;
             font-weight: bold;
         }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.pedido-card-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    const card = header.parentElement;
-                    card.classList.toggle('expanded');
-                });
-            });
-        });
-    </script>
 </head>
 <body>
     <header>CHURRASQUINHO DO LÊLE - MEUS PEDIDOS</header>
     <div style="position: absolute; top: 10px; right: 10px;">
-    <a href="/index" title="Voltar para Home">
-        <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
-            <i class="fas fa-house" style="font-size: 20px;"></i>
-        </button>
-    </a>
+        <a href="/index" title="Voltar para Home">
+            <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
+                <i class="fas fa-house" style="font-size: 20px;"></i>
+            </button>
+        </a>
     </div>
     <div class="content">
         {% if not pedidos %}
@@ -103,7 +115,7 @@
             {% for pedido in pedidos | sort(reverse=true, attribute='data_hora') %}
                 {% set data = pedido.data_hora[:10]|replace('-', '/') ~ ' - ' ~ pedido.data_hora[11:16] %}
                 <div class="pedido-card">
-                    <div class="pedido-card-header">
+                    <div class="pedido-card-header" onclick="toggleDetails(this)">
                         <h3 class="highlight">Pedido Nº {{ pedido.pedido_numero }}</h3>
                         <span class="details">{{ data }} | Status: <span class="highlight">{{ pedido.status }}</span></span>
                     </div>
@@ -118,6 +130,10 @@
                         </div>
                         <p class="details">Total: R$ {{ pedido.total }}</p>
                         {% if pedido.descricao %}<p class="details">Observações: {{ pedido.descricao }}</p>{% endif %}
+                        <div class="obs-section">
+                            <input type="text" class="obs-input" placeholder="Nova observação" id="nova-obs-{{ pedido.pedido_numero }}">
+                            <button class="obs-btn" onclick="adicionarObservacao({{ pedido.pedido_numero }})">Inserir Observação</button>
+                        </div>
                     </div>
                 </div>
             {% endfor %}
@@ -130,5 +146,42 @@
         ABERTO DE 17:30 AS 00:30<br>
         SEGUNDA A SEXTA
     </div>
+
+    <script>
+        function toggleDetails(header) {
+            const card = header.parentElement;
+            const allCards = document.querySelectorAll('.pedido-card');
+            allCards.forEach(c => { if (c !== card) c.classList.remove('expanded'); });
+            card.classList.toggle('expanded');
+        }
+
+        async function adicionarObservacao(pedidoId) {
+            const novaObs = document.getElementById(`nova-obs-${pedidoId}`).value.trim();
+            if (!novaObs) {
+                alert('Digite uma observação válida!');
+                return;
+            }
+
+            const response = await fetch(`/add_observacao/${pedidoId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ observacao: novaObs })
+            });
+
+            if (response.ok) {
+                document.getElementById(`nova-obs-${pedidoId}`).value = ''; // Limpa o input
+                // Recarrega a página para refletir a mudança (sem reimplementar carregarPedidos)
+                location.reload();
+            } else {
+                alert('Erro ao adicionar observação');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.pedido-card-header').forEach(header => {
+                header.addEventListener('click', () => toggleDetails(header));
+            });
+        });
+    </script>
 </body>
 </html>
