@@ -128,7 +128,6 @@ async function carregarPedidos() {
         const div = document.createElement('div');
         let statusClass = '';
         if (p.status === 'Pedido Realizado') statusClass = 'realizado';
-        else if (p.status === 'Em Andamento') statusClass = 'andamento';
         else if (p.status === 'Em Preparo') statusClass = 'empreparo';
         else if (p.status === 'Preparado') statusClass = 'preparado';
         else if (p.status === 'Entregue') statusClass = 'entregue';
