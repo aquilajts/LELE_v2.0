@@ -185,15 +185,22 @@
 </head>
 <body>
     <header>ESTOQUE - CHURRASQUINHO DO LÊLE</header>
+        
+        <!-- Botão Voltar -->
+        <div style="position: absolute; top: 10px; right: 10px;">
+            <a href="/caixa/funcionario" title="Voltar para Menu Funcionário">
+                <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
+                    <i class="fas fa-arrow-left" style="font-size: 20px;"></i>
+                </button>
+            </a>
+        </div>
     
-    <!-- Botão Voltar -->
-    <div style="position: absolute; top: 10px; right: 10px;">
-        <a href="/caixa/funcionario" title="Voltar para Menu Funcionário">
-            <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
-                <i class="fas fa-arrow-left" style="font-size: 20px;"></i>
+        <!-- Botão Adicionar produto -->
+        <div style="position: absolute; top: 10px; right: 70px;">
+            <button onclick="openModal()" style="background-color: #10B981; color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: transform 0.2s;">
+                Adicionar Produto
             </button>
-        </a>
-    </div>
+        </div>
 
     <!-- Navegação por categorias -->
     <div class="nav-container">
@@ -232,6 +239,9 @@
                             {% if i.disponivel %}Disponível{% else %}Indisponível{% endif %}
                         </span>
                     </div>
+                    <button onclick="excluirProduto('{{ i.ID }}')" style="background-color: #EF4444; color: #FFFFFF; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 10px; transition: transform 0.2s;">
+                        Excluir Produto
+                    </button>
                 </div>
                 {% endfor %}
             </div>
@@ -301,6 +311,113 @@
                 toggle.disabled = false;
             }
         }
+
+        // Abrir modal
+        function openModal() {
+            document.getElementById('addModal').style.display = 'block';
+            document.getElementById('modalBackground').style.display = 'block';
+        }
+
+        // Fechar modal
+        function closeModal() {
+            document.getElementById('addModal').style.display = 'none';
+            document.getElementById('modalBackground').style.display = 'none';
+        }
+
+        // Adicionar produto
+        async function adicionarProduto() {
+            const nome = document.getElementById('nome').value.trim();
+            const descricao = document.getElementById('descricao').value.trim();
+            const preco = parseFloat(document.getElementById('preco').value);
+            const disponivel = document.getElementById('disponivel').value === 'true';
+            const categoria = document.getElementById('categoria').value.trim() || document.getElementById('nova_categoria').value.trim();
+
+            if (!nome || !descricao || isNaN(preco) || !categoria) {
+                alert('Preencha todos os campos obrigatórios!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/estoque/adicionar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, descricao, preco, disponivel, categoria })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Produto adicionado com sucesso!');
+                    closeModal();
+                    location.reload();
+                } else {
+                    alert(data.error || 'Erro ao adicionar produto');
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                alert('Erro de conexão. Tente novamente.');
+            }
+        }
+
+        // Excluir produto
+        async function excluirProduto(itemId) {
+            const senha = prompt('Digite a senha para excluir:');
+            if (senha === 'cecilele25') {
+                try {
+                    const response = await fetch('/estoque/excluir', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: itemId, senha })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        alert('Produto excluído com sucesso!');
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Erro ao excluir produto');
+                    }
+                } catch (error) {
+                    console.error('Erro na requisição:', error);
+                    alert('Erro de conexão. Tente novamente.');
+                }
+            } else {
+                alert('Senha incorreta!');
+            }
+        }
     </script>
+    
+<!-- Modal Pop-up para Adicionar Produto -->
+    <div id="addModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); z-index: 1000; color: #000000; width: 300px;">
+        <h3>Adicionar Produto</h3>
+        <form id="addForm">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" required><br><br>
+            
+            <label for="descricao">Descrição:</label>
+            <textarea id="descricao" required></textarea><br><br>
+            
+            <label for="preco">Preço:</label>
+            <input type="number" id="preco" step="0.01" required><br><br>
+            
+            <label for="disponivel">Disponível:</label>
+            <select id="disponivel">
+                <option value="true">True</option>
+                <option value="false">False</option>
+            </select><br><br>
+            
+            <label for="categoria">Categoria:</label>
+            <select id="categoria">
+                <option value="">Nova categoria</option>
+                {% for cat in categorias_pop_up %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select><br>
+            <input type="text" id="nova_categoria" placeholder="Nova categoria (se selecionado 'Nova')"><br><br>
+            
+            <button type="button" onclick="adicionarProduto()" style="background-color: #10B981; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Adicionar</button>
+            <button type="button" onclick="closeModal()" style="background-color: #EF4444; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-left: 10px;">Cancelar</button>
+        </form>
+    </div>
+
+    <!-- Fundo escuro do modal -->
+    <div id="modalBackground" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 999;"></div>
 </body>
 </html>
