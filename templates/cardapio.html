@@ -104,41 +104,41 @@
             <div class="item-row">
                 {% for i in item %}
                 <div class="item-card">
-                    <img src="{{ i.imagem_url }}" style="{% if not i.disponivel %}filter: grayscale(100%);{% endif %}">
-                    <h3 style="font-weight: bold; font-size: 18px; margin: 5px 0;">{{ i.nome }}</h3>
-                    <p style="font-size: 12px; color: #6B7280; margin: 4px 0;">{{ i.descricao }}</p>
-                    <p style="color: #4B5563; font-size: 14px; margin: 5px 0;">R$ {{ '%.2f'|format(i.preco) }}</p>
-
-                    {% if categoria == "PÃO COM CHURRAS" %}
-                        {% if i.preco == 18 %}
-                            <label style="font-size: 12px; color: #4B5563;">
-                                Escolha o sabor:
-                                <select style="width: 100%; margin-top: 5px;">
-                                    {% for espeto in categorias['ESPETINHOS'] %}
-                                        {% if espeto.preco == 10 %}
-                                            <option>{{ espeto.nome }}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
-                            </label>
-                        {% elif i.preco == 22 %}
-                            <label style="font-size: 12px; color: #4B5563;">
-                                Escolha o sabor:
-                                <select id="sabor-{{ i.nome }}" style="width: 100%; margin-top: 5px;">
-                                    <option>MEDALHAO DE BOI</option>
-                                    <option>MEDALHAO DE FRANGO</option>
-                                    <option>PICANHA ORIGINAL</option>
-                                </select>
-                            </label>
-                        {% endif %}
+                <img src="{{ i.imagem_url }}" onerror="this.src='/static/produtos/default.png'" style="{% if not i.disponivel %}filter: grayscale(100%);{% endif %}">
+                <h3 style="font-weight: bold; font-size: 18px; margin: 5px 0;">{{ i.nome }}</h3>
+                <p style="font-size: 12px; color: #6B7280; margin: 4px 0;">{{ i.descricao }}</p>
+                <p style="color: #4B5563; font-size: 14px; margin: 5px 0;">R$ {{ '%.2f'|format(i.preco) }}</p>
+            
+                {% if categoria == "PÃO COM CHURRAS" %}
+                    {% if i.preco == 18 %}
+                        <label style="font-size: 12px; color: #4B5563;">
+                            Escolha o sabor:
+                            <select style="width: 100%; margin-top: 5px;">
+                                {% for espeto in categorias['ESPETINHOS'] %}
+                                    {% if espeto.preco == 10 %}
+                                        <option>{{ espeto.nome }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </label>
+                    {% elif i.preco == 22 %}
+                        <label style="font-size: 12px; color: #4B5563;">
+                            Escolha o sabor:
+                            <select id="sabor-{{ i.nome }}" style="width: 100%; margin-top: 5px;">
+                                <option>MEDALHAO DE BOI</option>
+                                <option>MEDALHAO DE FRANGO</option>
+                                <option>PICANHA ORIGINAL</option>
+                            </select>
+                        </label>
                     {% endif %}
-
-                    {% if i.disponivel %}
-                    <button onclick="adicionarAoCarrinho('{{ i.ID }}', {{ i.preco }}, '{{ i.nome }}', '{{ categoria }}')">+</button>
-                    {% else %}
-                    <p style="color: #D1D5DB;">Indisponível</p>
-                    {% endif %}
-                </div>
+                {% endif %}
+            
+                {% if i.disponivel %}
+                <button onclick="adicionarAoCarrinho('{{ i.ID }}', {{ i.preco }}, '{{ i.nome }}', '{{ categoria }}')">+</button>
+                {% else %}
+                <p style="color: #D1D5DB;">Indisponível</p>
+                {% endif %}
+            </div>
                 {% endfor %}
             </div>
             {% endfor %}
