@@ -411,8 +411,12 @@ def estoque():
                 'disponivel': item.get('disponivel', True)  # Se não existir, assume True
             })
         
+        # Obter categorias únicas para o pop-up
+        categorias_response = supabase.table('itens').select('categoria').execute()
+        categorias_pop_up = sorted(set(c['categoria'] for c in categorias_response.data if c.get('categoria')))
+        
         logging.info(f"Carregando estoque com {len(itens)} itens em {len(categorias)} categorias")
-        return render_template('estoque.html', categorias=categorias)
+        return render_template('estoque.html', categorias=categorias, categorias_pop_up=categorias_pop_up)
     
     except Exception as e:
         logging.error(f"Erro ao carregar estoque: {str(e)}")
@@ -445,6 +449,76 @@ def update_estoque():
             
     except Exception as e:
         logging.error(f"Erro ao atualizar estoque: {str(e)}")
+        return jsonify({"error": "Erro interno do servidor", "detalhe": str(e)}), 500
+
+@app.route('/estoque/adicionar', methods=['POST'])
+def estoque_adicionar():
+    """Rota para adicionar um novo produto ao estoque"""
+    try:
+        if not session.get('autenticado_funcionario'):
+            return jsonify({"error": "Funcionário não autenticado"}), 401
+        
+        data = request.get_json()
+        nome = data.get('nome')
+        descricao = data.get('descricao')
+        preco = float(data.get('preco'))
+        disponivel = data.get('disponivel')
+        categoria = data.get('categoria')
+
+        if not all([nome, descricao, preco, categoria]):
+            return jsonify({"error": "Todos os campos são obrigatórios"}), 400
+
+        # Gerar ID a partir do nome (sem espaços)
+        id_value = nome.replace(" ", "")
+        
+        # Verificar se ID já existe
+        check_response = supabase.table('itens').select('ID').eq('ID', id_value).execute()
+        if check_response.data:
+            return jsonify({"success": False, "error": "ID já existe"}), 400
+
+        # Inserir novo item
+        new_item = {
+            'ID': id_value,
+            'nome': nome,
+            'descricao': descricao,
+            'preco': preco,
+            'disponivel': disponivel,
+            'categoria': categoria
+        }
+        response = supabase.table('itens').insert(new_item).execute()
+        if response.data:
+            logging.info(f"Produto {nome} adicionado com ID {id_value}")
+            return jsonify({"success": True})
+        return jsonify({"success": False, "error": "Erro ao adicionar item"}), 500
+    except Exception as e:
+        logging.error(f"Erro ao adicionar produto: {str(e)}")
+        return jsonify({"error": "Erro interno do servidor", "detalhe": str(e)}), 500
+
+@app.route('/estoque/excluir', methods=['POST'])
+def estoque_excluir():
+    """Rota para excluir um produto do estoque"""
+    try:
+        if not session.get('autenticado_funcionario'):
+            return jsonify({"error": "Funcionário não autenticado"}), 401
+        
+        data = request.get_json()
+        item_id = data.get('id')
+        senha = data.get('senha')
+
+        if not item_id:
+            return jsonify({"error": "ID do item é obrigatório"}), 400
+        
+        if senha != 'cecilele25':
+            return jsonify({"success": False, "error": "Senha incorreta"}), 403
+
+        # Excluir o item
+        response = supabase.table('itens').delete().eq('ID', item_id).execute()
+        if response.data:
+            logging.info(f"Item {item_id} excluído com sucesso")
+            return jsonify({"success": True})
+        return jsonify({"success": False, "error": "Item não encontrado"}), 404
+    except Exception as e:
+        logging.error(f"Erro ao excluir produto: {str(e)}")
         return jsonify({"error": "Erro interno do servidor", "detalhe": str(e)}), 500
 
 @app.route('/caixa/funcionario/relatoriofinanceiro', methods=['GET'])
