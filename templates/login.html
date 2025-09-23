@@ -110,6 +110,7 @@
 <body>
     <header>CHURRASQUINHO DO LÊLE</header>
     <div class="content">
+        <p style="color: red; font-size: 0.9em; text-align: center;">Primeira vez aqui? Veja como usar, clique <button onclick="openTutorial()" style="background: none; border: none; color: #8B0000; text-decoration: underline; cursor: pointer; padding: 0;">aqui</button>.</p>
         <div class="login-info">
             <strong>Acesso automático. Memorize sua senha para retornos futuros.</strong>
         </div>
@@ -169,5 +170,54 @@
             <button type="submit">Confirmar</button>
         </form>
     </div>
+
+    <!-- Modal Carrossel de Tutorial -->
+    <div id="tutorialModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); z-index: 1000; color: #000000; width: 80%; max-width: 500px;">
+        <h3>Tutorial do Sistema</h3>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <button onclick="prevSlide()" style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Anterior</button>
+            <span id="slideCounter" style="font-weight: bold;">1/7</span>
+            <button onclick="nextSlide()" style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Próxima</button>
+        </div>
+        <img id="tutorialImage" src="/static/tutorial/etapa1.png" style="width: 100%; height: auto; border-radius: 10px;">
+        <button onclick="closeTutorial()" style="background-color: #EF4444; color: #FFFFFF; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Fechar (X)</button>
+    </div>
+
+    <!-- Fundo escuro do modal -->
+    <div id="modalBackground" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 999;"></div>
 </body>
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 7;
+
+        function openTutorial() {
+            document.getElementById('tutorialModal').style.display = 'block';
+            document.getElementById('modalBackground').style.display = 'block';
+            updateSlide();
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorialModal').style.display = 'none';
+            document.getElementById('modalBackground').style.display = 'none';
+        }
+
+        function updateSlide() {
+            document.getElementById('tutorialImage').src = `/static/tutorial/etapa${currentSlide}.png`;
+            document.getElementById('slideCounter').textContent = `${currentSlide}/${totalSlides}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+    </script>
 </html>
