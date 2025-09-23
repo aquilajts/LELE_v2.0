@@ -179,7 +179,7 @@
             <span id="slideCounter" style="font-weight: bold;">1/7</span>
             <button onclick="nextSlide()" style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Próxima</button>
         </div>
-        <img id="tutorialImage" src="/static/tutorial/etapa1.png" style="width: 100%; height: auto; border-radius: 10px;">
+        <img id="tutorialImage" src="/static/tutorial/etapa1.jpg" style="width: 100%; height: auto; border-radius: 10px;">
         <button onclick="closeTutorial()" style="background-color: #EF4444; color: #FFFFFF; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Fechar (X)</button>
     </div>
 
@@ -202,7 +202,7 @@
         }
 
         function updateSlide() {
-            document.getElementById('tutorialImage').src = `/static/tutorial/etapa${currentSlide}.png`;
+            document.getElementById('tutorialImage').src = `/static/tutorial/etapa${currentSlide}.jpg`;
             document.getElementById('slideCounter').textContent = `${currentSlide}/${totalSlides}`;
         }
 
