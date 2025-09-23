@@ -122,13 +122,19 @@ def esqueci_senha():
     if cliente.get('aniversario') != aniversario:
         return render_template('login.html', erro="Data de aniversário incorreta", authenticated=False)
 
+    # Se já veio a nova senha → redefinir
     if nova_senha:
         if len(nova_senha) < 6:
             return render_template('login.html', erro="Senha deve ter ao menos 6 dígitos", authenticated=False)
-        supabase.table('clientes').update({'senha': nova_senha}).eq('id_cliente', cliente['id_cliente']).execute()
-        return render_template('login.html', erro="Senha redefinida com sucesso!", authenticated=False)
 
+        supabase.table('clientes').update({'senha': nova_senha}).eq('id_cliente', cliente['id_cliente']).execute()
+
+        # 🔑 Redireciona para /login com mensagem de sucesso
+        return redirect(url_for('login', msg="Senha redefinida com sucesso!"))
+
+    # Se ainda não veio a nova senha → renderiza o login pedindo a senha
     return render_template('login.html', reset_senha=True, nome=nome, aniversario=aniversario)
+
 
 
 # Rota para o cardápio
