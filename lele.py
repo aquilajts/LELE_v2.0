@@ -25,6 +25,8 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route('/')
 def home():
+    if session.get('autenticado_cliente'):
+        return redirect(url_for('index'))
     return redirect(url_for('login'))
 
 @app.route('/index', methods=['GET'])
