@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Churrasquinho do Lêle - Meus Pedidos</title>]
+    <title>Churrasquinho do Lêle - Meus Pedidos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         html, body {
@@ -166,7 +166,7 @@
                     {% elif pedido.status == 'Pago' %} {% set status_class = 'pago' %}
                     {% endif %}
                     <div class="pedido-card {{ status_class }}">
-                        <div class="pedido-card-header" onclick="toggleDetails(this)">
+                        <div class="pedido-card-header">
                             <h3 class="highlight">Pedido Nº {{ pedido.pedido_numero }}</h3>
                             <span class="details">{{ data }} | Status: <span class="highlight">{{ pedido.status }}</span></span>
                         </div>
