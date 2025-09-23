@@ -180,7 +180,18 @@
                                 {% endfor %}
                             </div>
                             <p class="details">Total: R$ {{ pedido.total }}</p>
-                            {% if pedido.descricao %}<p class="details">Observações: {{ pedido.descricao }}</p>{% endif %}
+                            {% if pedido.descricao %}
+                                <p class="details">Obs: {{ pedido.descricao }}</p>
+                            {% endif %}
+                            {% if pedido.obs2 %}
+                                <p class="details">Obs2: {{ pedido.obs2 }}</p>
+                            {% endif %}
+                            {% if pedido.obs3 %}
+                                <p class="details">Obs3: {{ pedido.obs3 }}</p>
+                            {% endif %}
+                            {% if pedido.obs4 %}
+                                <p class="details">Obs4: {{ pedido.obs4 }}</p>
+                            {% endif %}
                             <div class="obs-section">
                                 <input type="text" class="obs-input" placeholder="Nova observação" id="nova-obs-{{ pedido.pedido_numero }}">
                                 <button class="obs-btn" onclick="adicionarObservacao({{ pedido.pedido_numero }})">Inserir Observação</button>
