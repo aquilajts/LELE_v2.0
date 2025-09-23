@@ -89,6 +89,48 @@ def login():
                 logging.error(f"Erro ao cadastrar cliente: {str(e)}")
                 return render_template('login.html', erro="Erro ao cadastrar: Nome já pode estar em uso", authenticated=False)
     return render_template('login.html', authenticated=False)
+    # depois de autenticar
+    cliente = supabase.table('clientes').select('aniversario').eq('id_cliente', existing['id_cliente']).execute()
+    if not cliente.data[0].get('aniversario'):
+        return render_template('login.html', solicitar_aniversario=True)
+
+@app.route('/atualizar_aniversario', methods=['POST'])
+def atualizar_aniversario():
+    if not session.get('id_cliente'):
+        return jsonify({"error": "Não autenticado"}), 401
+    aniversario = request.form.get('aniversario')
+    if not aniversario:
+        return jsonify({"error": "Data obrigatória"}), 400
+    id_cliente = session['id_cliente']
+    supabase.table('clientes').update({'aniversario': aniversario}).eq('id_cliente', id_cliente).execute()
+    return redirect(url_for('index'))
+
+
+@app.route('/esqueci_senha', methods=['POST'])
+def esqueci_senha():
+    nome = request.form.get('nome').strip().lower()
+    aniversario = request.form.get('aniversario')
+    nova_senha = request.form.get('nova_senha')
+
+    if not nome or not aniversario:
+        return render_template('login.html', erro="Preencha todos os campos", authenticated=False)
+
+    query = supabase.table('clientes').select('id_cliente, aniversario').eq('nome_lower', nome).execute()
+    if not query.data:
+        return render_template('login.html', erro="Usuário não encontrado", authenticated=False)
+
+    cliente = query.data[0]
+    if cliente.get('aniversario') != aniversario:
+        return render_template('login.html', erro="Data de aniversário incorreta", authenticated=False)
+
+    if nova_senha:
+        if len(nova_senha) < 6:
+            return render_template('login.html', erro="Senha deve ter ao menos 6 dígitos", authenticated=False)
+        supabase.table('clientes').update({'senha': nova_senha}).eq('id_cliente', cliente['id_cliente']).execute()
+        return render_template('login.html', erro="Senha redefinida com sucesso!", authenticated=False)
+
+    return render_template('login.html', reset_senha=True, nome=nome, aniversario=aniversario)
+
 
 # Rota para o cardápio
 @app.route('/cardapio', methods=['GET'])
