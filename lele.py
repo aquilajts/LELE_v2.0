@@ -93,7 +93,7 @@ def login():
             except Exception as e:
                 logging.error(f"Erro ao cadastrar cliente: {str(e)}")
                 return render_template('login.html', erro="Erro ao cadastrar: Nome já pode estar em uso", authenticated=False)
-    return render_template('login.html', authenticated=False)
+    return render_template('login.html', authenticated=False, show_tutorial=True)
 
 @app.route('/atualizar_aniversario', methods=['POST'])
 def atualizar_aniversario():
