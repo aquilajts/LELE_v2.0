@@ -49,29 +49,30 @@ def login():
         if len(senha) < 6:
             return render_template('login.html', erro="Senha deve ter pelo menos 6 dígitos", authenticated=False)
         
-        # Normaliza nome para minúsculas para verificação case-insensitive
         nome_lower = nome_input.lower()
-        
-        # Verifica se o nome (case-insensitive) já existe
-        check_nome = supabase.table('clientes').select('id_cliente, senha, nome').eq('nome_lower', nome_lower).execute()
+        check_nome = supabase.table('clientes').select('id_cliente, senha, nome, aniversario').eq('nome_lower', nome_lower).execute()
         
         if check_nome.data:
-            # Nome existe (case-insensitive), verifica senha
             existing = check_nome.data[0]
             if existing['senha'] == senha:
                 session['autenticado_cliente'] = True
                 session['id_cliente'] = existing['id_cliente']
                 session.permanent = True
                 app.permanent_session_lifetime = timedelta(minutes=180)
+
+                # 🔎 Aqui entra a checagem do aniversário
+                if not existing.get('aniversario'):
+                    return render_template('login.html', solicitar_aniversario=True)
+
                 return redirect(url_for('index'))
             else:
                 return render_template('login.html', erro="Senha incorreta. O nome já está cadastrado, tente outra senha ou nome.", authenticated=False)
         else:
-            # Nome não existe, cadastra novo com nome_lower e nome original
+            # cadastro novo
             id_cliente = f"{nome_lower}_{senha}"
             new_client = {
-                'nome': nome_input,  # Armazena nome original para exibição
-                'nome_lower': nome_lower,  # Campo auxiliar para buscas case-insensitive
+                'nome': nome_input,
+                'nome_lower': nome_lower,
                 'senha': senha,
                 'id_cliente': id_cliente
             }
@@ -82,17 +83,15 @@ def login():
                     session['id_cliente'] = id_cliente
                     session.permanent = True
                     app.permanent_session_lifetime = timedelta(minutes=180)
-                    return redirect(url_for('index'))
+                    
+                    # 🔎 novo cliente sempre terá aniversario vazio → já pede
+                    return render_template('login.html', solicitar_aniversario=True)
                 else:
                     return render_template('login.html', erro="Erro ao cadastrar", authenticated=False)
             except Exception as e:
                 logging.error(f"Erro ao cadastrar cliente: {str(e)}")
                 return render_template('login.html', erro="Erro ao cadastrar: Nome já pode estar em uso", authenticated=False)
     return render_template('login.html', authenticated=False)
-    # depois de autenticar
-    cliente = supabase.table('clientes').select('aniversario').eq('id_cliente', existing['id_cliente']).execute()
-    if not cliente.data[0].get('aniversario'):
-        return render_template('login.html', solicitar_aniversario=True)
 
 @app.route('/atualizar_aniversario', methods=['POST'])
 def atualizar_aniversario():
