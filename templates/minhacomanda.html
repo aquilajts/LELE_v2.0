@@ -6,113 +6,230 @@
     <title>Churrasquinho do Lêle - Minha Comanda</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        /* RESET E BODY */
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Helvetica', sans-serif;
+            margin: 0;
+            padding: 0;
             background: url('/static/wallpaperhorizontal.png') no-repeat center center fixed;
             background-size: cover;
             color: #FFFFFF;
-            margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
+
+        /* HEADER */
         .header {
             text-align: center;
             padding: 20px;
-            color: #FFFFFF;
-            font-size: 2.5em;
+            font-size: 2em;
             font-weight: bold;
-            text-shadow: 2px 2px 4px #000000;
+            text-shadow: 2px 2px 4px #000;
+            background-color: rgba(0,0,0,0.5);
         }
+
+        /* BOTÃO HOME */
+        .home-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .home-btn button {
+            background-color: #8B0000;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            min-width: 48px;
+            min-height: 48px;
+            transition: transform 0.2s;
+        }
+        .home-btn button:hover { transform: scale(1.1); }
+
+        /* CONTAINER PRINCIPAL */
         .content {
             flex: 1;
             display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* FILTROS */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .filters select, .filters input {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        /* RESUMO */
+        .summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
             justify-content: center;
-            align-items: center;
-            padding: 20px;
         }
-        .info-card {
-            background-color: rgba(255, 255, 255, 0.9);
-            color: #000000;
+        .summary-card {
+            background: rgba(255,255,255,0.9);
+            color: #000;
             border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            padding: 15px 20px;
             text-align: center;
-            max-width: 300px;
+            min-width: 200px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
-        .info-card h3 { color: #8B0000; margin-bottom: 10px; }
-        .info-card p { font-size: 18px; margin: 5px 0; }
+        .summary-card:hover { transform: scale(1.03); }
+        .summary-card h3 { color: #8B0000; margin-bottom: 8px; }
+
+        /* PEDIDOS LISTA */
         .pedidos-list {
-            max-width: 600px;
-            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         .pedido-item {
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 8px;
+            background: rgba(255,255,255,0.9);
+            color: #000;
+            border-radius: 10px;
             padding: 15px;
-            margin: 10px 0;
-            color: #000000;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
+        .pedido-item:hover { transform: scale(1.02); }
         .pedido-item h4 { color: #8B0000; margin-bottom: 5px; }
-        .produto-list { font-size: 14px; }
+        .produto-list p { font-size: 14px; margin: 2px 0; }
+
+        /* PRODUTOS MAIS CONSUMIDOS */
+        .top-produtos {
+            background: rgba(255,255,255,0.85);
+            color: #000;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .top-produtos h3 { color: #8B0000; margin-bottom: 10px; }
+
+        /* FOOTER */
         .footer {
-            background-color: #000000;
+            background-color: #000;
             text-align: center;
             padding: 10px;
             font-size: 0.9em;
         }
-        .footer a {
-            color: #FFFFFF;
-            text-decoration: none;
-            margin: 0 10px;
-        }
-        @media (max-width: 600px) {
-            .info-card, .pedidos-list { width: 90%; }
+        .footer a { color: #fff; text-decoration: none; margin: 0 10px; }
+
+        @media (max-width: 768px) {
+            .summary { flex-direction: column; align-items: center; }
         }
     </style>
 </head>
 <body>
-    <div class="header">CHURRASQUINHO DO LELE - MINHA COMANDA</div>
-    <div style="position: absolute; top: 10px; right: 10px;">
+
+    <!-- HEADER -->
+    <div class="header">CHURRASQUINHO DO LÊLE - MINHA COMANDA</div>
+    <div class="home-btn">
         <a href="/index" title="Voltar para Home">
-            <button style="background-color: #8B0000; color: #FFFFFF; border: none; padding: 10px; border-radius: 5px; cursor: pointer; min-width: 48px; min-height: 48px; transition: transform 0.2s;">
-                <i class="fas fa-house" style="font-size: 20px;"></i>
-            </button>
+            <button><i class="fas fa-house"></i></button>
         </a>
     </div>
+
     <div class="content">
-        <div class="info-card">
-            <h3>Resumo</h3>
-            <p>Total de Pedidos: {{ num_pedidos }}</p>
-            <p>Total Gasto: R$ {{ total_gasto | round(2) }}</p>
-            <p>Status Mais Comum: {{ status_comum }}</p>
+
+        <!-- FILTROS -->
+        <div class="filters">
+            <select id="filter-status" onchange="aplicarFiltros()">
+                <option value="">Todos os Status</option>
+                <option value="Pedido Realizado">Pedido Realizado</option>
+                <option value="Em Preparo">Em Preparo</option>
+                <option value="Preparado">Preparado</option>
+                <option value="Entregue">Entregue</option>
+                <option value="Pago">Pago</option>
+            </select>
+            <input type="date" id="filter-date" onchange="aplicarFiltros()">
         </div>
-        <div class="pedidos-list">
+
+        <!-- RESUMO FINANCEIRO -->
+        <div class="summary">
+            <div class="summary-card">
+                <h3>Total de Pedidos</h3>
+                <p>{{ num_pedidos }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Gasto</h3>
+                <p>R$ {{ total_gasto | round(2) }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Status Mais Comum</h3>
+                <p>{{ status_comum }}</p>
+            </div>
+        </div>
+
+        <!-- PRODUTOS MAIS CONSUMIDOS -->
+        <div class="top-produtos">
+            <h3>Top 5 Produtos Mais Consumidos</h3>
+            <ol>
+                {% for produto, qtd in top_produtos %}
+                    <li>{{ produto }} - {{ qtd }}x</li>
+                {% endfor %}
+            </ol>
+        </div>
+
+        <!-- LISTA DE PEDIDOS -->
+        <div class="pedidos-list" id="pedidos-list">
             {% for pedido in pedidos %}
-                <div class="pedido-item">
-                    <h4>Pedido Nº {{ pedido.pedido_numero }} - {{ pedido.status }}</h4>
-                    <p>Data: {{ pedido.data_hora[:10]|replace('-', '/') }} - {{ pedido.data_hora[11:16] }}</p>
-                    <p>Mesa: {{ pedido.mesa }} | Contato: {{ pedido.contato }}</p>
-                    <div class="produto-list">
-                        {% for produto in pedido.produto %}
-                            <p>• {{ produto }}</p>
-                        {% endfor %}
-                    </div>
-                    <p><strong>Total: R$ {{ pedido.total | round(2) }}</strong></p>
-                    {% if pedido.descricao %}
-                        <p>Observações: {{ pedido.descricao }}</p>
-                    {% endif %}
+            <div class="pedido-item" data-status="{{ pedido.status }}" data-date="{{ pedido.data_hora[:10] }}">
+                <h4>Pedido Nº {{ pedido.pedido_numero }} - {{ pedido.status }}</h4>
+                <p>Data: {{ pedido.data_hora[:10]|replace('-', '/') }} - {{ pedido.data_hora[11:16] }}</p>
+                <p>Mesa: {{ pedido.mesa }} | Contato: {{ pedido.contato }}</p>
+                <div class="produto-list">
+                    {% for produto in pedido.produto %}
+                        <p>• {{ produto }}</p>
+                    {% endfor %}
                 </div>
+                <p><strong>Total: R$ {{ pedido.total | round(2) }}</strong></p>
+                {% if pedido.descricao %}
+                    <p>Observações: {{ pedido.descricao }}</p>
+                {% endif %}
+            </div>
             {% endfor %}
         </div>
+
     </div>
+
+    <!-- FOOTER -->
     <div class="footer">
-        <a href="https://www.instagram.com/churrasquinhodolele027" target="_blank">
-            @churrasquinhodolele027
-        </a><br>
+        <a href="https://www.instagram.com/churrasquinhodolele027" target="_blank">@churrasquinhodolele027</a><br>
         ABERTO DE 17:30 AS 00:30<br>
         SEGUNDA A SEXTA
     </div>
+
+    <script>
+        function aplicarFiltros() {
+            const statusFiltro = document.getElementById('filter-status').value;
+            const dateFiltro = document.getElementById('filter-date').value;
+
+            document.querySelectorAll('.pedido-item').forEach(item => {
+                const status = item.getAttribute('data-status');
+                const date = item.getAttribute('data-date');
+
+                const mostrar = (!statusFiltro || status === statusFiltro) &&
+                                (!dateFiltro || date === dateFiltro);
+
+                item.style.display = mostrar ? 'block' : 'none';
+            });
+        }
+    </script>
 </body>
 </html>
