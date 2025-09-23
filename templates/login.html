@@ -78,16 +78,8 @@
             font-weight: bold;
             transition: transform 0.2s, background-color 0.2s;
         }
-        button:hover {
-            transform: scale(1.05);
-            background-color: #A52A2A;
-        }
-        .erro {
-            color: red;
-            font-size: 14px;
-            text-align: center;
-            margin-top: 10px;
-        }
+        button:hover { transform: scale(1.05); background-color: #A52A2A; }
+        .erro { color: red; font-size: 14px; text-align: center; margin-top: 10px; }
         .footer {
             background-color: #000000;
             text-align: center;
@@ -95,15 +87,24 @@
             font-size: 0.9em;
             margin-top: auto;
         }
-        .footer a {
-            color: #FFCD00;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        @media (max-width: 600px) {
-            .login-form { width: 90%; }
-        }
+        .footer a { color: #FFCD00; text-decoration: none; font-weight: bold; }
+        @media (max-width: 600px) { .login-form { width: 90%; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* modal básico */
+        .modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.6);
+        }
+        .modal form {
+            background:#fff; padding:20px; border-radius:8px; max-width:320px; width:90%;
+            color:#000;
+        }
+        .modal h3 { color:#8B0000; text-align:center; margin-bottom:10px; }
+        .modal small { display:block; margin-bottom:10px; color:#4B5563; }
     </style>
 </head>
 <body>
@@ -125,6 +126,9 @@
             <button onclick="window.location.href='/pedidos/lele'" style="margin-top: 12px;">
                 Acesso Lêle (Interno)
             </button>
+            <!-- botão esqueci senha -->
+            <button type="button" onclick="document.getElementById('resetModal').style.display='flex'" 
+                    style="margin-top:12px; background:#4B5563;">Esqueci a senha</button>
         </div>
     </div>
     <div class="footer">
@@ -133,6 +137,31 @@
         </a><br>
         ABERTO DE 17:30 AS 00:30<br>
         SEGUNDA A SEXTA
+    </div>
+
+    <!-- modal de aniversario -->
+    {% if solicitar_aniversario %}
+    <div class="modal">
+        <form method="POST" action="/atualizar_aniversario">
+            <h3>Informe sua data de aniversário</h3>
+            <input type="date" name="aniversario" required>
+            <small>A sua data será utilizada para recuperação de senha, caso à esqueça.</small>
+            <button type="submit">Salvar</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- modal esqueci senha -->
+    <div id="resetModal" class="modal" style="display:none;">
+        <form method="POST" action="/esqueci_senha">
+            <h3>Recuperar Senha</h3>
+            <input type="text" name="nome" placeholder="Seu Nome" required>
+            <input type="date" name="aniversario" required>
+            {% if reset_senha %}
+                <input type="password" name="nova_senha" placeholder="Nova Senha (mín. 6 dígitos)" required>
+            {% endif %}
+            <button type="submit">Confirmar</button>
+        </form>
     </div>
 </body>
 </html>
