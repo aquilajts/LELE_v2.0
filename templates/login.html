@@ -155,13 +155,14 @@
         </form>
     </div>
     {% endif %}
-
-    <!-- modal esqueci senha -->
-    <div id="resetModal" class="modal" style="display:none;">
+    
+    <!-- modal de recupeara senha -->
+    <div id="resetModal" class="modal" 
+         style="{% if reset_senha %}display:flex;{% else %}display:none;{% endif %}">
         <form method="POST" action="/esqueci_senha">
             <h3>Recuperar Senha</h3>
-            <input type="text" name="nome" placeholder="Seu Nome" required>
-            <input type="date" name="aniversario" required>
+            <input type="text" name="nome" placeholder="Seu Nome" value="{{ nome or '' }}" required>
+            <input type="date" name="aniversario" value="{{ aniversario or '' }}" required>
             {% if reset_senha %}
                 <input type="password" name="nova_senha" placeholder="Nova Senha (mín. 6 dígitos)" required>
             {% endif %}
