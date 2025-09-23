@@ -136,7 +136,6 @@
     </style>
 </head>
 <body>
-
     <!-- HEADER -->
     <div class="header">CHURRASQUINHO DO LÊLE - MINHA COMANDA</div>
     <div class="home-btn">
@@ -146,20 +145,6 @@
     </div>
 
     <div class="content">
-
-        <!-- FILTROS -->
-        <div class="filters">
-            <select id="filter-status" onchange="aplicarFiltros()">
-                <option value="">Todos os Status</option>
-                <option value="Pedido Realizado">Pedido Realizado</option>
-                <option value="Em Preparo">Em Preparo</option>
-                <option value="Preparado">Preparado</option>
-                <option value="Entregue">Entregue</option>
-                <option value="Pago">Pago</option>
-            </select>
-            <input type="date" id="filter-date" onchange="aplicarFiltros()">
-        </div>
-
         <!-- RESUMO FINANCEIRO -->
         <div class="summary">
             <div class="summary-card">
@@ -170,26 +155,12 @@
                 <h3>Total Gasto</h3>
                 <p>R$ {{ total_gasto | round(2) }}</p>
             </div>
-            <div class="summary-card">
-                <h3>Status Mais Comum</h3>
-                <p>{{ status_comum }}</p>
-            </div>
-        </div>
-
-        <!-- PRODUTOS MAIS CONSUMIDOS -->
-        <div class="top-produtos">
-            <h3>Top 5 Produtos Mais Consumidos</h3>
-            <ol>
-                {% for produto, qtd in top_produtos %}
-                    <li>{{ produto }} - {{ qtd }}x</li>
-                {% endfor %}
-            </ol>
         </div>
 
         <!-- LISTA DE PEDIDOS -->
         <div class="pedidos-list" id="pedidos-list">
             {% for pedido in pedidos %}
-            <div class="pedido-item" data-status="{{ pedido.status }}" data-date="{{ pedido.data_hora[:10] }}">
+            <div class="pedido-item">
                 <h4>Pedido Nº {{ pedido.pedido_numero }} - {{ pedido.status }}</h4>
                 <p>Data: {{ pedido.data_hora[:10]|replace('-', '/') }} - {{ pedido.data_hora[11:16] }}</p>
                 <p>Mesa: {{ pedido.mesa }} | Contato: {{ pedido.contato }}</p>
@@ -205,7 +176,6 @@
             </div>
             {% endfor %}
         </div>
-
     </div>
 
     <!-- FOOTER -->
@@ -214,22 +184,5 @@
         ABERTO DE 17:30 AS 00:30<br>
         SEGUNDA A SEXTA
     </div>
-
-    <script>
-        function aplicarFiltros() {
-            const statusFiltro = document.getElementById('filter-status').value;
-            const dateFiltro = document.getElementById('filter-date').value;
-
-            document.querySelectorAll('.pedido-item').forEach(item => {
-                const status = item.getAttribute('data-status');
-                const date = item.getAttribute('data-date');
-
-                const mostrar = (!statusFiltro || status === statusFiltro) &&
-                                (!dateFiltro || date === dateFiltro);
-
-                item.style.display = mostrar ? 'block' : 'none';
-            });
-        }
-    </script>
 </body>
 </html>
