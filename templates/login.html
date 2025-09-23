@@ -123,6 +123,11 @@
             {% if erro %}
                 <p class="erro">{{ erro }}</p>
             {% endif %}
+            {% if request.args.get('msg') %}
+                <p style="color:green; font-size:14px; text-align:center; margin-top:10px;">
+                    {{ request.args.get('msg') }}
+                </p>
+            {% endif %}
             <button onclick="window.location.href='/pedidos/lele'" style="margin-top: 12px;">
                 Acesso Lêle (Interno)
             </button>
