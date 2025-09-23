@@ -106,7 +106,7 @@
     <script>
         function toggleDetails(header) {
             const details = header.nextElementSibling;
-            const allDetails = document.querySelectorAll('.pedido-details');
+            const allDetails = document.querySelectorAll('.pedido-card-content');
             allDetails.forEach(d => { if (d !== details) d.style.display = 'none'; });
             details.style.display = details.style.display === 'block' ? 'none' : 'block';
         }
