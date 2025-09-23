@@ -55,7 +55,6 @@
         }
         .pedido-card-header h3 { margin: 0; font-size: 18px; }
         .pedido-card-content { display: none; padding-top: 10px; color: #4B5563; }
-        .pedido-card.expanded .pedido-card-content { display: block; }
         .produto-scroll {
             display: flex;
             overflow-x: auto;
@@ -153,38 +152,43 @@
         {% if not pedidos %}
             <p>Nenhum pedido encontrado.</p>
         {% else %}
-            {% for pedido in pedidos | sort(reverse=true, attribute='data_hora') %}
-                {% set data = pedido.data_hora[:10]|replace('-', '/') ~ ' - ' ~ pedido.data_hora[11:16] %}
-                {% set status_class = '' %}
-                {% if pedido.status == 'Pedido Realizado' %} {% set status_class = 'realizado' %}
-                {% elif pedido.status == 'Em Preparo' %} {% set status_class = 'empreparo' %}
-                {% elif pedido.status == 'Preparado' %} {% set status_class = 'preparado' %}
-                {% elif pedido.status == 'Entregue' %} {% set status_class = 'entregue' %}
-                {% elif pedido.status == 'Pago' %} {% set status_class = 'pago' %}
-                {% endif %}
-                <div class="pedido-card {{ status_class }}">
-                    <div class="pedido-card-header" onclick="toggleDetails(this)">
-                        <h3 class="highlight">Pedido Nº {{ pedido.pedido_numero }}</h3>
-                        <span class="details">{{ data }} | Status: <span class="highlight">{{ pedido.status }}</span></span>
-                    </div>
-                    <div class="pedido-card-content">
-                        <p class="details">Mesa: {{ pedido.mesa }} | Contato: {{ pedido.contato }}</p>
-                        <div class="produto-scroll">
-                            {% for produto in pedido.produto %}
-                                <div class="produto-item">
-                                    <p>{{ produto }}</p>
-                                </div>
-                            {% endfor %}
+            {% set pedidos_filtrados = pedidos | rejectattr('status', 'equalto', 'Pago') | list | sort(reverse=true, attribute='data_hora') %}
+            {% if not pedidos_filtrados %}
+                <p>Nenhum pedido encontrado.</p>
+            {% else %}
+                {% for pedido in pedidos_filtrados %}
+                    {% set data = pedido.data_hora[:10]|replace('-', '/') ~ ' - ' ~ pedido.data_hora[11:16] %}
+                    {% set status_class = '' %}
+                    {% if pedido.status == 'Pedido Realizado' %} {% set status_class = 'realizado' %}
+                    {% elif pedido.status == 'Em Preparo' %} {% set status_class = 'empreparo' %}
+                    {% elif pedido.status == 'Preparado' %} {% set status_class = 'preparado' %}
+                    {% elif pedido.status == 'Entregue' %} {% set status_class = 'entregue' %}
+                    {% elif pedido.status == 'Pago' %} {% set status_class = 'pago' %}
+                    {% endif %}
+                    <div class="pedido-card {{ status_class }}">
+                        <div class="pedido-card-header" onclick="toggleDetails(this)">
+                            <h3 class="highlight">Pedido Nº {{ pedido.pedido_numero }}</h3>
+                            <span class="details">{{ data }} | Status: <span class="highlight">{{ pedido.status }}</span></span>
                         </div>
-                        <p class="details">Total: R$ {{ pedido.total }}</p>
-                        {% if pedido.descricao %}<p class="details">Observações: {{ pedido.descricao }}</p>{% endif %}
-                        <div class="obs-section">
-                            <input type="text" class="obs-input" placeholder="Nova observação" id="nova-obs-{{ pedido.pedido_numero }}">
-                            <button class="obs-btn" onclick="adicionarObservacao({{ pedido.pedido_numero }})">Inserir Observação</button>
+                        <div class="pedido-card-content">
+                            <p class="details">Mesa: {{ pedido.mesa }} | Contato: {{ pedido.contato }}</p>
+                            <div class="produto-scroll">
+                                {% for produto in pedido.produto %}
+                                    <div class="produto-item">
+                                        <p>{{ produto }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <p class="details">Total: R$ {{ pedido.total }}</p>
+                            {% if pedido.descricao %}<p class="details">Observações: {{ pedido.descricao }}</p>{% endif %}
+                            <div class="obs-section">
+                                <input type="text" class="obs-input" placeholder="Nova observação" id="nova-obs-{{ pedido.pedido_numero }}">
+                                <button class="obs-btn" onclick="adicionarObservacao({{ pedido.pedido_numero }})">Inserir Observação</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            {% endif %}
         {% endif %}
     </div>
     <div class="footer">
