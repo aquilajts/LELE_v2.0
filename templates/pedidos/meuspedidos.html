@@ -126,12 +126,22 @@
         
             if (response.ok) {
                 document.getElementById(`nova-obs-${pedidoId}`).value = ''; // Limpa o input
-                location.reload(); // Recarrega para refletir a mudança
+        
+                // Recarrega apenas este pedido ou todos
+                const card = document.getElementById(`pedido-card-${pedidoId}`);
+                if (card) {
+                    // opcional: atualizar observações no card sem reload total
+                    const obsAtual = card.querySelector('.obs-atual');
+                    if (obsAtual) {
+                        const data = await response.json();
+                        obsAtual.textContent = `Observações: ${data.pedido.obs2 || ''} ${data.pedido.obs3 || ''} ${data.pedido.obs4 || ''}`;
+                    }
+                }
             } else {
                 alert('Erro ao adicionar observação');
             }
         }
-        
+       
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.pedido-card-header').forEach(header => {
                 header.addEventListener('click', () => toggleDetails(header));
